@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" data-stock="paper">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; img-src 'self' data:;">
+<meta name="color-scheme" content="light">
+<title>Desky</title>
+<link rel="stylesheet" href="./fonts.css">
+<link rel="stylesheet" href="../shared/desky.css">
+<link rel="stylesheet" href="./panel.css">
+</head>
+<body>
+<!--
+THESIS: the client's copy of the same document the operator works on; it refuses the tray-icon-and-toast pattern that lets remote access happen where nobody is looking.
+OWN-WORLD: ruled printed fields on paper stock, one ink, no cards and no shadows; seal red reserved by law for "control is released"; Golos Text with PT Mono for the number read aloud.
+STORY: the client reads two values out loud, sees who is asking, decides, and then watches a running account of what is happening on their own machine.
+FIRST VIEWPORT: the nine-digit number in fixed cells is the largest thing on screen, the eight-character password directly beneath it, and nothing else competes until someone asks to connect.
+FORM: carbon-copy custody form, candidate 5 of 7, seed 5fbcc315.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+
+<svg class="visually-hidden" aria-hidden="true">
+  <symbol id="ico-power" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v8"/><path d="M17.7 6.8a8 8 0 1 1-11.4 0"/></g></symbol>
+  <symbol id="ico-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 4v4.5H16"/></g></symbol>
+  <symbol id="ico-external" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5h6v6"/><path d="M19.5 4.5L11 13"/><path d="M18 14.5v4a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6h4"/></g></symbol>
+</svg>
+
+<div class="drag-strip"></div>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Permissions (macOS)                                                 -->
+<!-- ------------------------------------------------------------------ -->
+
+<section id="view-permissions" class="view view-pad" hidden>
+  <p class="label">One thing left to do</p>
+  <h1 id="perm-title">Permissions needed</h1>
+  <p id="perm-body" class="body-text"></p>
+
+  <ul class="perm-list">
+    <li id="perm-screen" class="perm-item">
+      <div class="perm-copy">
+        <span class="perm-name">Screen Recording</span>
+        <span class="perm-why">So they can see what is happening on your screen</span>
+      </div>
+      <button class="btn" type="button" data-permission="screen">Open settings</button>
+    </li>
+    <li id="perm-accessibility" class="perm-item">
+      <div class="perm-copy">
+        <span class="perm-name">Accessibility</span>
+        <span class="perm-why">So they can move your pointer and type</span>
+      </div>
+      <button class="btn" type="button" data-permission="accessibility">Open settings</button>
+    </li>
+  </ul>
+
+  <p class="body-text quiet">
+    macOS will not let an app switch these on for you. The toggle has to be
+    flipped by hand: find <span class="tcc-name">Desky</span> in the list that opens and turn it on.
+  </p>
+
+  <p class="body-text quiet">
+    <strong>If <span class="tcc-name">Desky</span> is already switched on there</strong> but this
+    window still says the permission is missing, the setting belongs to an
+    older version. Select it in that list, remove it with the
+    <strong>−</strong> button, then come back here and ask again.
+  </p>
+
+  <div class="row">
+    <button id="perm-recheck" class="btn" type="button">
+      <svg class="ico" aria-hidden="true"><use href="#ico-refresh"/></svg>
+      Check again
+    </button>
+    <button id="perm-relaunch" class="btn btn-primary" type="button" hidden>Restart Desky</button>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Ready                                                               -->
+<!-- ------------------------------------------------------------------ -->
+
+<section id="view-ready" class="view" hidden>
+  <div class="view-pad">
+    <p class="label">Read these out</p>
+
+    <div class="credential">
+      <span id="ready-code" class="data code-value">— — —</span>
+      <span class="credential-label label">Computer number</span>
+    </div>
+
+    <div class="credential credential-second">
+      <span id="ready-password" class="data password-value">———— ————</span>
+      <span class="credential-label label">Session password</span>
+      <button id="rotate" class="btn btn-quiet btn-icon" type="button" title="New password" aria-label="New password">
+        <svg class="ico" aria-hidden="true"><use href="#ico-refresh"/></svg>
+      </button>
+    </div>
+
+    <p class="body-text quiet">
+      The password is good for one session. It changes by itself once the
+      session ends.
+    </p>
+
+    <div id="ready-limited" class="notice" hidden>
+      <p id="ready-limited-text" class="notice-text"></p>
+      <!--
+        macOS keeps a permission entry keyed to the version that asked for
+        it. After an update the row is still in the list and still switched
+        on, but no longer trusted — so pressing the button opens a list
+        where everything already looks correct, and the client goes round
+        in a circle. There is no API to detect this, so it is simply said.
+      -->
+      <p class="notice-text quiet">
+        If <span class="tcc-name">Desky</span> is already switched on in that list, the
+        setting belongs to an older version. Select it, remove it with the
+        <strong>−</strong> button, then press this again.
+      </p>
+      <button id="ready-grant" class="btn" type="button">Turn on control</button>
+    </div>
+    <div id="ready-capture-denied" class="notice" role="status" hidden>
+      <p class="notice-text">
+        macOS refused to record the screen, so the last session could not
+        start. This usually means the Screen Recording permission belongs to
+        an older version. Remove <span class="tcc-name">Desky</span> from that list with the
+        <strong>−</strong> button, then turn it on again.
+      </p>
+      <button id="ready-fix-capture" class="btn" type="button">Open Screen Recording settings</button>
+    </div>
+    <p id="ready-locked" class="notice" role="status" hidden></p>
+  </div>
+
+  <div class="foot">
+    <div class="row row-between">
+      <span id="ready-state" class="state state-idle">Connecting to the server</span>
+      <button id="open-settings" class="btn btn-quiet" type="button">Settings</button>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Incoming request                                                    -->
+<!-- ------------------------------------------------------------------ -->
+
+<section id="view-request" class="view view-pad view-request" hidden>
+  <p class="label">Someone wants to connect</p>
+  <h1 id="request-name">Support</h1>
+
+  <dl class="request-facts">
+    <div class="field-row"><dt>From</dt><dd id="request-addr" class="data">—</dd></div>
+    <div class="field-row"><dt>Time</dt><dd id="request-time" class="data">—</dd></div>
+  </dl>
+
+  <p class="body-text">
+    This person will be able to see your screen and control your computer.
+    You will see everything they do, and you can end the session at any moment.
+  </p>
+
+  <p id="request-warning" class="notice" hidden></p>
+
+  <div class="request-actions">
+    <button id="request-accept" class="btn btn-primary btn-lg btn-block" type="button">Allow</button>
+    <button id="request-decline" class="btn btn-lg btn-block" type="button">Decline</button>
+  </div>
+
+  <p class="body-text quiet">
+    If you were not expecting this, decline it and change the password.
+  </p>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Live session                                                        -->
+<!-- ------------------------------------------------------------------ -->
+
+<section id="view-session" class="view view-session" hidden>
+  <header class="live-head">
+    <span class="live-mark" aria-hidden="true"></span>
+    <div class="live-copy">
+      <span class="live-title">Session in progress</span>
+      <span id="session-operator" class="live-who">Support</span>
+    </div>
+    <span id="session-time" class="num live-time">00:00</span>
+  </header>
+
+  <div class="view-pad live-body">
+    <dl class="live-facts">
+      <div class="field-row"><dt>What they can do</dt><dd id="session-mode">Watch and control</dd></div>
+      <div class="field-row"><dt>Open right now</dt><dd id="session-window">—</dd></div>
+      <div class="field-row"><dt>Showing</dt><dd id="session-display">Main display</dd></div>
+      <div class="field-row"><dt>Connection</dt><dd id="session-path">Being established</dd></div>
+    </dl>
+
+    <p class="label">What is happening</p>
+    <ul id="session-feed" class="feed">
+      <li class="feed-empty">Nothing has been done yet. Actions will appear here.</li>
+    </ul>
+  </div>
+
+  <div class="foot">
+    <button id="session-end" class="btn btn-seal btn-lg btn-block" type="button">
+      <svg class="ico" aria-hidden="true"><use href="#ico-power"/></svg>
+      End the session
+    </button>
+    <p id="kill-hint" class="body-text quiet center"></p>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Settings                                                            -->
+<!-- ------------------------------------------------------------------ -->
+
+<section id="view-settings" class="view view-pad" hidden>
+  <p class="label">Settings</p>
+  <h1>This computer</h1>
+
+  <label class="entry">
+    <span class="label">What to call this computer</span>
+    <input id="set-name" class="input" type="text" maxlength="48" placeholder="For example, Irina's laptop">
+  </label>
+
+  <label class="entry">
+    <span class="label">Server address</span>
+    <input id="set-server" class="input" type="text" spellcheck="false" placeholder="wss://desky.example.com/signal">
+  </label>
+  <p id="set-server-error" class="notice" hidden></p>
+
+  <label class="entry">
+    <span class="label">Start automatically</span>
+    <span class="choice">
+      <input id="set-launch" type="checkbox">
+      <span class="body-text">Open Desky when this computer starts up</span>
+    </span>
+    <p class="body-text quiet">
+      Keeps this computer reachable after a restart, so you do not have to
+      find and open Desky before someone can help you. Nobody can connect
+      without you pressing Allow, whether this is on or off.
+    </p>
+  </label>
+
+  <div class="entry">
+    <span class="label">Session log</span>
+    <p class="body-text quiet">
+      Every connection is recorded on this computer: who, when, and how long
+      it lasted. It is never sent anywhere.
+    </p>
+    <button id="open-logs" class="btn" type="button">
+      <svg class="ico" aria-hidden="true"><use href="#ico-external"/></svg>
+      Show the log
+    </button>
+  </div>
+
+  <div class="foot foot-inline">
+    <button id="settings-back" class="btn btn-primary" type="button">Done</button>
+    <button id="quit" class="btn btn-quiet" type="button">Quit Desky</button>
+  </div>
+</section>
+
+<script type="module" src="./panel.js"></script>
+</body>
+</html>

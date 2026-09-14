@@ -1,0 +1,93 @@
+/*
+ * The frame around the shared screen.
+ *
+ * This window covers the whole display, ignores every mouse event, and
+ * floats above fullscreen apps. It is the product's central promise
+ * made physical: while someone is connected, the client's own screen is
+ * visibly bordered and no arrangement of windows can hide it.
+ *
+ * It holds still. A pulsing border would be decoration competing for
+ * attention with the work being done inside it.
+ *
+ * These rules live in a file rather than a <style> block because the
+ * window's content policy allows stylesheets but not inline styles —
+ * inlined, the frame silently does not draw.
+ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.frame {
+  position: fixed;
+  inset: 0;
+  border: 4px solid #a8321e;
+}
+
+/*
+ * A hairline just inside the band. Against a dark or busy desktop a
+ * single flat rule reads as a wallpaper edge; two weights read as
+ * something drawn on top of the screen.
+ */
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+/*
+ * Pinned to the top edge, above the menu bar. That is where macOS
+ * itself puts system-level status, so the tag reads as belonging to the
+ * machine rather than to some window — and it leaves the Dock, which
+ * people actually click, uncovered.
+ */
+.tag {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 14px 6px;
+  background: #a8321e;
+  color: #fff;
+  font-family: 'Golos Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+
+.tag-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.tag-who {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-time {
+  font-family: 'PT Mono', ui-monospace, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag-rule {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  flex: none;
+}

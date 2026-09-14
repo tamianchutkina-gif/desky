@@ -1,0 +1,80 @@
+{
+  "name": "@desky/host",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Desky client agent \u2014 the program that runs on the machine being supported.",
+  "main": "src/main.js",
+  "scripts": {
+    "sync": "node ../../scripts/sync-shared.mjs",
+    "start": "npm run sync && electron .",
+    "pack": "npm run sync && electron-builder --dir",
+    "dist": "npm run sync && electron-builder",
+    "dist:mac": "npm run sync && electron-builder --mac",
+    "dist:mac:universal": "npm run sync && electron-builder --mac --universal && node ../../scripts/keep-universal.mjs",
+    "dist:win": "npm run sync && electron-builder --win",
+    "dist:linux": "npm run sync && electron-builder --linux",
+    "icon": "node ../../scripts/make-icon-run.cjs"
+  },
+  "dependencies": {
+    "@nut-tree-fork/libnut-darwin": "^2.7.5",
+    "@nut-tree-fork/libnut-linux": "^2.7.5",
+    "@nut-tree-fork/libnut-win32": "^2.7.5",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "electron": "44.0.0",
+    "electron-builder": "^26.15.7"
+  },
+  "build": {
+    "appId": "software.desky.agent",
+    "productName": "Desky",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "shared/**/*"
+    ],
+    "extraMetadata": {
+      "main": "src/main.js"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "NSCameraUsageDescription": "Not used.",
+        "NSMicrophoneUsageDescription": "Not used.",
+        "NSAppleEventsUsageDescription": "Desky controls the pointer and keyboard during a support session you approved."
+      },
+      "hardenedRuntime": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "afterPack": "build/adhoc-sign.cjs"
+  },
+  "author": {
+    "name": "Desky"
+  }
+}

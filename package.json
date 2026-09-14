@@ -1,0 +1,28 @@
+{
+  "name": "desky",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted remote desktop — consent-first, peer-to-peer, no session limits.",
+  "workspaces": [
+    "packages/server",
+    "packages/host"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "server": "npm run start --workspace=@desky/server",
+    "server:dev": "npm run dev --workspace=@desky/server",
+    "host": "npm run start --workspace=@desky/host",
+    "host:pack": "npm run pack --workspace=@desky/host",
+    "dist:mac:universal": "npm run dist:mac:universal --workspace=@desky/host",
+    "sync": "node scripts/sync-shared.mjs",
+    "pretest": "node scripts/sync-shared.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "dev": "./scripts/dev.sh",
+    "deploy": "./scripts/deploy.sh",
+    "publish:mac": "./scripts/publish-mac.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

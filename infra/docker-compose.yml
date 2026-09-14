@@ -1,0 +1,162 @@
+# Desky — the whole server side.
+#
+#   caddy     terminates TLS and serves the operator console
+#   signaling introduces the two peers, then carries nothing
+#   coturn    relays media only when a direct path cannot be found
+#
+# Copy .env.example to .env, fill it in, then: docker compose up -d
+#
+# Nothing here runs as root. Every service runs as one unprivileged
+# account that exists on the host for this purpose and nothing else
+# (SERVICE_UID/SERVICE_GID, created by scripts/deploy.sh), holds no
+# capabilities, and cannot acquire any. An escape from any of these
+# containers lands on an account with no shell, no sudo and no files
+# outside this stack.
+
+name: desky
+
+services:
+  signaling:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # The image already declines to run as root. Naming the uid here as
+    # well means it is a known host account rather than whichever one
+    # happens to share the image's internal number.
+    user: '${SERVICE_UID}:${SERVICE_GID}'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      PORT: 8080
+      PUBLIC_URL: https://${DOMAIN}
+      TRUST_PROXY: '1'
+      TURN_HOST: ${DOMAIN}
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PORT: 3478
+      TURN_TLS_PORT: 5349
+      TURN_TLS: ${TURN_TLS:-0}
+      # A support session can legitimately sit idle for hours while
+      # someone watches an install finish, so there is no idle timeout
+      # anywhere in this stack. Only the consent prompt expires.
+      CONSENT_TIMEOUT_MS: 120000
+      DOWNLOAD_DIR: /downloads
+    volumes:
+      - devices:/data
+      # ../downloads, deliberately, and not ./downloads. This file lives
+      # in infra/, which deploy.sh syncs with --delete — a published
+      # agent archive inside that tree would be deleted by the next
+      # routine deploy, and the first sign of it would be a client whose
+      # install command 404s. Read-only: the server hands this directory
+      # out and never writes to it; scripts/publish-mac.sh puts it there.
+      - ../downloads:/downloads:ro
+    expose:
+      - '8080'
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - signaling
+    user: '${SERVICE_UID}:${SERVICE_GID}'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # The one capability left, and not by choice: the caddy binary carries
+    # cap_net_bind_service as a file capability, and the kernel refuses to
+    # exec a file with capabilities the bounding set does not contain. A
+    # bare cap_drop: ALL therefore does not produce a caddy without
+    # privileges, it produces `exec /usr/bin/caddy: operation not
+    # permitted` and a container that restarts for ever.
+    cap_add:
+      - NET_BIND_SERVICE
+    # Which leaves binding 80 and 443 to an unprivileged user. Raising the
+    # threshold inside the container settles it without relying on the
+    # capability above being granted: net.ipv4.* is per-network-namespace,
+    # so this changes nothing on the host or in any other container — it
+    # says only that within these four walls, low ports are ordinary.
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      # The directory, not the file. A bind-mounted file is bound by
+      # inode, and anything that rewrites it — rsync, sed -i, an editor
+      # saving — hands the host a new inode and leaves the container
+      # reading the old one. Mounting the directory resolves the name on
+      # every open instead, so a redeployed Caddyfile is the one Caddy
+      # reloads. This is also why .env lives beside it and not in here.
+      - ./caddy:/etc/caddy:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *logging
+
+  coturn:
+    image: coturn/coturn:4.6-alpine
+    restart: unless-stopped
+    # Host networking on purpose: coturn hands out the address it sees
+    # itself on, and it needs a wide UDP range for relayed media. Behind
+    # Docker's NAT it would advertise an unreachable private address.
+    #
+    # Host networking rules out the sysctl above — it would be the real
+    # one. Nothing here needs it: 3478 and 5349 are both above 1024, so
+    # an unprivileged process binds them unaided.
+    network_mode: host
+    user: '${SERVICE_UID}:${SERVICE_GID}'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Nothing here needs it — 3478 and 5349 are both above 1024. The
+    # turnserver binary carries cap_net_bind_service as a file capability
+    # all the same, and a file whose capabilities are outside the bounding
+    # set cannot be exec'd at all. So it is listed to make the binary
+    # runnable, not to make it able to do anything it could not already.
+    cap_add:
+      - NET_BIND_SERVICE
+    volumes:
+      # The directory, not the file — for the same reason Caddy's config
+      # is mounted as a directory above. A bind-mounted file is bound by
+      # inode, so rsync or an editor writing a new one and renaming it
+      # over the old leaves the container reading the copy it started
+      # with: the file on disk is right and the running relay is stale.
+      - ./coturn:/etc/coturn:ro
+    # The secret is read from the config file rather than passed here.
+    # Arguments are visible to every account on the machine in `ps` and
+    # in /proc/<pid>/cmdline, which undoes the care taken to keep .env at
+    # mode 600 — and a VPS is rarely a single-tenant machine.
+    command: >
+      -c /etc/coturn/turnserver.local.conf
+      --realm=${DOMAIN}
+      --external-ip=${PUBLIC_IP}
+    logging: *logging
+
+# Named explicitly rather than left to the project prefix, because
+# deploy.sh has to hand each one to the service account before anything
+# starts and must be able to name them without guessing.
+volumes:
+  devices:
+    name: desky-devices
+  caddy-data:
+    name: desky-caddy-data
+  caddy-config:
+    name: desky-caddy-config

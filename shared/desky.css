@@ -1,0 +1,389 @@
+/*
+ * Desky — shared visual system.
+ *
+ * One rule governs everything here: the ink never changes, only the
+ * stock. The operator console and the client's panel are the same
+ * document printed on different paper, which is why there is a single
+ * set of ink roles and two stock definitions rather than two themes.
+ *
+ * The stock is chosen from the physical scene, never from taste:
+ *
+ *   carbon — the operator spends an hour staring at a bright rectangle
+ *            that is someone else's screen. Everything around it must
+ *            be dark and matte, or it competes with the only thing
+ *            they are actually reading.
+ *
+ *   paper  — the client glances at a corner of their own screen every
+ *            few minutes, eyes adapted to their own bright documents,
+ *            to confirm that what they allowed is still what is
+ *            happening. It has to read instantly and must not look
+ *            like a system error.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Stocks
+ * ------------------------------------------------------------------ */
+
+:root,
+[data-stock='paper'] {
+  --stock: #f4f1ea;
+  --stock-sunk: #eae6dc;
+  --stock-raised: #fffefb;
+
+  --ink-strong: #17150f;
+  --ink: #35322a;
+  --ink-muted: #5f5a4e;
+  --ink-faint: #8d8879;
+
+  --rule: #d9d3c5;
+  --rule-strong: #bdb6a5;
+
+  --seal: #a8321e;
+
+  --field: #fffefb;
+  --field-border: #c6c0b0;
+}
+
+[data-stock='carbon'] {
+  --stock: #14130f;
+  --stock-sunk: #0d0c09;
+  --stock-raised: #1d1c16;
+
+  --ink-strong: #efeadc;
+  --ink: #c7c1b0;
+  --ink-muted: #948e7c;
+  --ink-faint: #6b6659;
+
+  --rule: #2c2a23;
+  --rule-strong: #423f35;
+
+  /* Ink transfers lighter onto carbon than it prints on the original.
+     Same pigment, different stock — and it clears 4.5:1 here too. */
+  --seal: #e2664a;
+
+  --field: #100f0c;
+  --field-border: #3a372e;
+}
+
+/* ------------------------------------------------------------------ *
+ * Type
+ * ------------------------------------------------------------------ */
+
+:root {
+  --face-ui: 'Golos Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --face-data: 'PT Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Fixed steps, not fluid. A clamped heading that shrinks inside a
+     narrow panel looks worse than one that simply reflows. */
+  --t-micro: 0.6875rem;
+  --t-small: 0.8125rem;
+  --t-base: 0.9375rem;
+  --t-lead: 1.0625rem;
+  --t-title: 1.375rem;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+
+  --radius: 3px;
+
+  /* Sheet feed, not choreography: linear, brief, and only ever used to
+     show that something changed state. */
+  --move: 150ms linear;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--stock);
+  color: var(--ink);
+  font-family: var(--face-ui);
+  font-size: var(--t-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every digit that ticks lives in a fixed cell, so a running timer or a
+   changing latency never nudges what sits beside it. */
+.data,
+.num {
+  font-family: var(--face-data);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.label {
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  color: var(--ink-strong);
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--t-title); }
+h2 { font-size: var(--t-lead); }
+h3 { font-size: var(--t-base); }
+
+p { margin: 0 0 var(--sp-3); max-width: 68ch; }
+p:last-child { margin-bottom: 0; }
+
+/* ------------------------------------------------------------------ *
+ * Browser surfaces
+ *
+ * The parts nobody draws still belong to the design. Left at their
+ * defaults they announce that a page was assembled rather than built.
+ * ------------------------------------------------------------------ */
+
+::selection {
+  background: var(--seal);
+  color: var(--stock);
+}
+
+:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 2px;
+}
+
+:where(input, textarea) {
+  caret-color: var(--seal);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border: 3px solid var(--stock);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+/* ------------------------------------------------------------------ *
+ * Controls
+ *
+ * One button family across both surfaces. The client's giant "end it"
+ * control and the operator's toolbar buttons are the same component at
+ * different scales — a support tool where the same action looks
+ * different in two places is a tool people misread under stress.
+ * ------------------------------------------------------------------ */
+
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--field);
+  color: var(--ink-strong);
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--move), border-color var(--move), color var(--move);
+}
+
+.btn:hover:not(:disabled) { border-color: var(--ink-faint); }
+.btn:active:not(:disabled) { background: var(--stock-sunk); }
+
+.btn:disabled {
+  cursor: not-allowed;
+  /* Genuinely desaturated, not merely dimmed: an unavailable control
+     should look unavailable, not look like it is loading. */
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.btn-primary {
+  background: var(--ink-strong);
+  border-color: var(--ink-strong);
+  color: var(--stock);
+}
+.btn-primary:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
+.btn-primary:active:not(:disabled) { background: var(--ink); }
+
+/*
+ * Seal red is reserved, by law, for one meaning: control of this
+ * machine is currently released to someone else. It marks the live
+ * session, the frame around the screen, and the control that ends it.
+ * It is never an error colour, never a hover, never decoration.
+ */
+.btn-seal {
+  background: var(--seal);
+  border-color: var(--seal);
+  color: #fff;
+}
+.btn-seal:hover:not(:disabled) { filter: brightness(1.08); }
+
+.btn-lg {
+  padding: 0.8125rem 1.25rem;
+  font-size: var(--t-lead);
+}
+
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-muted);
+}
+.btn-quiet:hover:not(:disabled) {
+  background: var(--stock-sunk);
+  border-color: transparent;
+  color: var(--ink-strong);
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--field);
+  color: var(--ink-strong);
+  font: inherit;
+  transition: border-color var(--move);
+}
+
+.input:hover { border-color: var(--ink-faint); }
+.input:focus { border-color: var(--seal); outline-offset: 1px; }
+.input::placeholder { color: var(--ink-faint); }
+
+/* ------------------------------------------------------------------ *
+ * Ruled fields
+ *
+ * The structural motif: a printed label above a hairline, with the
+ * value sitting in the field below it. It replaces the card, which is
+ * why nothing in this system needs a box or a shadow to hold together.
+ * ------------------------------------------------------------------ */
+
+.field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding-block: 0.4375rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.field-row:last-child { border-bottom: 0; }
+
+.field-row dt {
+  margin: 0;
+  font-size: var(--t-small);
+  color: var(--ink-muted);
+}
+
+.field-row dd {
+  margin: 0;
+  color: var(--ink-strong);
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ *
+ * State vocabulary
+ *
+ * Three states, rendered identically on both surfaces, always with the
+ * measured value beside the name.
+ *
+ * Each one differs in shape as well as weight, because a set of dots
+ * that differ only in colour is unreadable to anyone who cannot
+ * separate those colours — and because "settled" and "still working on
+ * it" must not look alike. Seal red is absent here on purpose: it means
+ * one thing only, and it is not "connection quality".
+ * ------------------------------------------------------------------ */
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--t-small);
+  color: var(--ink-muted);
+}
+
+.state::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* Settled and good: a solid mark. */
+.state-ok { color: var(--ink); }
+
+/* Not resolved yet: hollow, because nothing has been decided. */
+.state-idle { color: var(--ink-faint); }
+.state-idle::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+/* Degraded or lost: a different shape entirely, at full ink weight. */
+.state-warn { color: var(--ink-strong); }
+.state-warn::before {
+  border-radius: 0;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * hidden
+ *
+ * Both renderers hide things by setting the `hidden` attribute from
+ * JavaScript, and trust it to work. It does not: `hidden` is styled by
+ * the browser's own stylesheet, which every author rule outranks. One
+ * `display` on a class — `.state` here, `.notice:has(.btn)` in the
+ * panel — is enough to pin an element open forever, and the symptom is
+ * never a visible error. It is a warning that will not go away no
+ * matter what the code does, and hours spent looking for the condition
+ * that sets it, because there is no such condition.
+ *
+ * This has already happened twice, in two different files. So the rule
+ * lives here, once, and outranks whatever comes after it.
+ * ------------------------------------------------------------------ */
+[hidden] { display: none !important; }

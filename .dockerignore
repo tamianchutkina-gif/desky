@@ -1,0 +1,31 @@
+# Build context for the signaling server.
+#
+# The image copies four things: the two package.json files, shared/ and
+# packages/server/. Everything else here is context the daemon packs and
+# transfers for nothing — and the agent's release builds and node_modules
+# together are most of a gigabyte, on a VPS, on every build.
+#
+# The agent is a desktop app and is deliberately not built in Docker, so
+# its whole workspace is excluded rather than trimmed.
+
+node_modules/
+**/node_modules/
+packages/host/
+
+# Device registry of a locally running server. The deployed one keeps
+# its own in a volume; copying a developer's in would hand the server
+# someone else's registrations.
+data/
+
+.env
+.env.*
+!.env.example
+
+.git/
+.gitignore
+.impeccable/
+tests/
+scripts/
+infra/
+*.log
+.DS_Store

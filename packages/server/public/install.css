@@ -1,0 +1,155 @@
+/*
+ * Paper stock, deliberately. This page belongs to the client, not to
+ * the operator — it is read once, on their own bright screen, in the
+ * minute before they hand over control. Carbon is for the console.
+ */
+body {
+  background: var(--stock);
+  color: var(--ink);
+  font-family: var(--face-ui);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.sheet {
+  max-width: 39rem;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5) var(--sp-7);
+}
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.wordmark {
+  font-weight: 600;
+  font-size: var(--t-lead);
+  letter-spacing: 0.01em;
+  color: var(--ink-strong);
+}
+
+.masthead .sub {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+}
+
+h1 {
+  font-size: var(--t-title);
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--ink-strong);
+  margin: 0 0 var(--sp-3);
+}
+
+.lede {
+  color: var(--ink-muted);
+  margin: 0 0 var(--sp-6);
+}
+
+/* The command is the one thing on this page that must be got exactly
+   right, so it is the only thing set in the data face and the only
+   thing with a border around it. */
+.command {
+  border: 1px solid var(--field-border);
+  background: var(--field);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.command code {
+  font-family: var(--face-data);
+  font-size: var(--t-small);
+  color: var(--ink-strong);
+  flex: 1 1 18rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copy {
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 500;
+  color: var(--stock-raised);
+  background: var(--ink-strong);
+  border: 1px solid var(--ink-strong);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  transition: opacity var(--move);
+  white-space: nowrap;
+}
+
+.copy:hover { opacity: 0.85; }
+.copy:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+.copy[data-copied='true'] { background: var(--ink-muted); border-color: var(--ink-muted); }
+
+ol {
+  margin: var(--sp-6) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+ol li {
+  counter-increment: step;
+  position: relative;
+  padding: var(--sp-4) 0 var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--rule);
+}
+
+ol li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: var(--sp-4);
+  font-family: var(--face-data);
+  font-size: var(--t-small);
+  color: var(--ink-faint);
+}
+
+ol strong {
+  display: block;
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+
+ol span {
+  color: var(--ink-muted);
+  font-size: var(--t-small);
+}
+
+.note {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--rule-strong);
+  font-size: var(--t-small);
+  color: var(--ink-muted);
+}
+
+.note p { margin: 0 0 var(--sp-3); }
+.note p:last-child { margin-bottom: 0; }
+.note b { color: var(--ink-strong); font-weight: 600; }
+
+kbd {
+  /* The system face first, not the data face: PT Mono has no glyph for
+     ⌘ and prints a replacement box, on the one instruction the client
+     has to follow before anything else works. */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', var(--face-data);
+  font-size: 0.9em;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 0 0.3em;
+  color: var(--ink-strong);
+}

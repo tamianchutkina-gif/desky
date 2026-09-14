@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; connect-src 'self';">
+<title>Desky engine</title>
+</head>
+<body>
+<!--
+  No interface. This window exists because WebRTC and screen capture
+  live in Chromium while input injection lives in the main process; it
+  is the half that touches the network. It is never shown.
+-->
+<script type="module" src="./engine.js"></script>
+</body>
+</html>

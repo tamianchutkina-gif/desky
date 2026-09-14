@@ -1,0 +1,55 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# WebSocket upgrades pass through untouched. The signaling socket
+	# stays open for the whole session, so no proxy read timeout may
+	# apply to it — a timeout here would end sessions the product
+	# promises are unlimited.
+	# X-Forwarded-For is overwritten rather than appended to, so the
+	# backend cannot be handed a chain the caller invented. That value
+	# keys rate limiting and is shown to the client as the address of
+	# whoever is asking to connect.
+	@signal path /signal
+	reverse_proxy @signal signaling:8080 {
+		header_up X-Forwarded-For {remote_host}
+		transport http {
+			read_timeout 0
+			write_timeout 0
+		}
+	}
+
+	reverse_proxy signaling:8080 {
+		header_up X-Forwarded-For {remote_host}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		# The console controls other people's machines and must never be
+		# embeddable in a third-party page.
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+
+		# Content-Security-Policy is deliberately not set here. The signaling
+		# server sets its own on every HTML response (packages/server/src/
+		# static.js), and a second policy would not add to the first — a
+		# browser enforces the intersection of every policy it is sent, so two
+		# that drift apart silently forbid what each alone allows. One owner,
+		# and it is the code that knows what the console loads.
+
+		# Nothing in the console has any use for these, and nothing else sets
+		# them. Capture happens on the agent, at the far end, in a different
+		# application.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), display-capture=(), payment=(), usb=()"
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

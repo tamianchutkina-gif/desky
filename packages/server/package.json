@@ -1,0 +1,15 @@
+{
+  "name": "@desky/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Desky signaling server — rendezvous only, never sees screen data.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  }
+}

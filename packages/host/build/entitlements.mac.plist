@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Electron's renderer needs both of these under the hardened runtime;
+	  without them the app crashes on launch instead of starting.
+	-->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+
+	<!-- The native input module is loaded at runtime. -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+
+	<!-- Signaling and the peer connection. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+
+	<!--
+	  Screen Recording and Accessibility are not entitlements — macOS
+	  grants them per app through System Settings, and only a person
+	  sitting at the machine can turn them on. The agent detects which
+	  one is missing and opens the right pane.
+	-->
+</dict>
+</plist>

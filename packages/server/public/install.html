@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" data-stock="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Desky — install</title>
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/shared/desky.css">
+<link rel="stylesheet" href="/install.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'><rect width='1024' height='1024' rx='228' fill='%23212120'/><path fill='%23e0a03a' fill-rule='evenodd' d='M 262 216 h188 a296 296 0 0 1 0 592 h-188 z M 346 292 h104 a212 220 0 0 1 0 440 h-104 z'/><g transform='translate(543 606) rotate(-6) scale(0.74)'><path fill='%23ffffff' stroke='%23212120' stroke-width='20.3' stroke-linejoin='round' d='M 0 0 L 0 290 L 78.7 240.5 L 146.8 374.1 L 216.3 338.7 L 148.2 205 L 234.6 170.5 Z'/></g></svg>">
+</head>
+<body>
+<main class="sheet">
+
+  <header class="masthead">
+    <span class="wordmark">Desky</span>
+    <span class="sub">Install on this Mac</span>
+  </header>
+
+  <h1>One line, and Desky is installed.</h1>
+  <p class="lede">
+    Copy the line below, paste it into Terminal, and press Return. It
+    downloads Desky, installs it, and starts it. Nothing is shared and
+    nobody can see your screen until you press Allow yourself.
+  </p>
+
+  <div class="command">
+    <code id="command">curl -fsSL __DESKY_ORIGIN__/install.sh | bash</code>
+    <button id="copy" class="copy" type="button" data-copied="false">Copy</button>
+  </div>
+
+  <ol>
+    <li>
+      <strong>Open Terminal</strong>
+      <span>Press <kbd>⌘</kbd> <kbd>Space</kbd>, type <em>Terminal</em>, press Return.</span>
+    </li>
+    <li>
+      <strong>Paste the line and press Return</strong>
+      <span>It takes a minute or two. Leave the window open until it finishes.</span>
+    </li>
+    <li>
+      <strong>Grant Screen Recording when asked</strong>
+      <span>Desky opens the right pane of System Settings for you. Without it there is nothing to share.</span>
+    </li>
+    <li>
+      <strong>Read out the computer number</strong>
+      <span>Nine digits, shown in the Desky window. Then wait — a request appears, and you decide.</span>
+    </li>
+  </ol>
+
+  <div class="note">
+    <p>
+      <b>Why a command and not a normal download.</b> Desky is not
+      distributed through the App Store and carries no paid Apple
+      developer certificate, so a copy downloaded in a browser is
+      blocked by macOS with no way past it. Fetched this way it is not,
+      which is the only reason for the extra step.
+    </p>
+    <p>
+      <b>What it does to your Mac.</b> It writes one application to your
+      Applications folder and starts it. Nothing else is installed and
+      nothing runs in the background afterwards. Quitting Desky ends
+      any session immediately.
+    </p>
+  </div>
+
+</main>
+<script src="/install.js"></script>
+</body>
+</html>

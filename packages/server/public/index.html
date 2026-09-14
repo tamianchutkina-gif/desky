@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en" data-stock="carbon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Desky — console</title>
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/shared/desky.css">
+<link rel="stylesheet" href="/console.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'><rect width='1024' height='1024' rx='228' fill='%23212120'/><path fill='%23e0a03a' fill-rule='evenodd' d='M 262 216 h188 a296 296 0 0 1 0 592 h-188 z M 346 292 h104 a212 220 0 0 1 0 440 h-104 z'/><g transform='translate(543 606) rotate(-6) scale(0.74)'><path fill='%23ffffff' stroke='%23212120' stroke-width='20.3' stroke-linejoin='round' d='M 0 0 L 0 290 L 78.7 240.5 L 146.8 374.1 L 216.3 338.7 L 148.2 205 L 234.6 170.5 Z'/></g></svg>">
+</head>
+<body>
+<!--
+THESIS: a session is a transfer of custody, not a connection; this console refuses the category's centred login card with two number fields and a green Connect button.
+OWN-WORLD: ruled printed fields on carbon stock, one ink, no cards and no shadows; seal red reserved by law for "control is released"; Golos Text with PT Mono for every measured value.
+STORY: the operator reads a number aloud, asks, waits for a person to say yes, then works inside a screen that is the only lit thing on the page.
+FIRST VIEWPORT: the nine-digit number in fixed cells is the largest type on screen, above the eight-cell password and the operator's name; the request control sits at the foot where a signature goes; the custody chain rules the right column.
+FORM: carbon-copy custody form, candidate 5 of 7, seed 5fbcc315.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+
+<svg class="visually-hidden" aria-hidden="true">
+  <defs>
+    <g id="i-base" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="ico-display" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="1"/><path d="M8.5 20.5h7M12 17v3.5"/></g></symbol>
+  <symbol id="ico-displays" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="12" height="9" rx="1"/><path d="M9.5 16.5h12a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1h-4"/><path d="M6 15.5h4"/></g></symbol>
+  <symbol id="ico-gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 17a9 9 0 1 1 17 0"/><path d="M12 17l4.5-5"/></g></symbol>
+  <symbol id="ico-clipboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.5H7a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 17 4.5h-2"/><rect x="9" y="2.5" width="6" height="4" rx="1"/></g></symbol>
+  <symbol id="ico-expand" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5h6v6M9.5 20.5h-6v-6M20.5 3.5l-7 7M3.5 20.5l7-7"/></g></symbol>
+  <symbol id="ico-collapse" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 9.5h-6v-6M3.5 14.5h6v6M13.5 10.5l7-7M10.5 13.5l-7 7"/></g></symbol>
+  <symbol id="ico-keyboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 9.5h.01M9.5 9.5h.01M13 9.5h.01M16.5 9.5h.01M6 12.75h.01M9.5 12.75h.01M13 12.75h.01M16.5 12.75h.01M8 15.5h8"/></g></symbol>
+  <symbol id="ico-power" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v8"/><path d="M17.7 6.8a8 8 0 1 1-11.4 0"/></g></symbol>
+  <symbol id="ico-stock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></g></symbol>
+</svg>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Connect                                                             -->
+<!-- ------------------------------------------------------------------ -->
+
+<div id="view-connect" class="view view-connect">
+  <header class="masthead">
+    <span class="wordmark">Desky</span>
+    <div class="masthead-tools">
+      <span id="server-state" class="state state-idle">Connecting to the server</span>
+      <button id="stock-toggle" class="btn btn-quiet btn-icon" type="button" title="Light or dark background" aria-label="Switch background">
+        <svg class="ico" aria-hidden="true"><use href="#ico-stock"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="sheet">
+    <form id="connect-form" class="form" novalidate>
+      <div class="entry">
+        <label class="label" for="code">Computer number</label>
+        <input id="code" class="cells cells-code" name="code" type="text"
+               inputmode="numeric" autocomplete="off" spellcheck="false"
+               placeholder="000 000 000" maxlength="11" required>
+      </div>
+
+      <div class="entry entry-split">
+        <div>
+          <label class="label" for="password">Session password</label>
+          <input id="password" class="cells cells-password" name="password" type="text"
+                 autocomplete="off" spellcheck="false" autocapitalize="characters"
+                 placeholder="———— ————" maxlength="9" required>
+        </div>
+        <div>
+          <label class="label" for="operator">How to introduce you to the client</label>
+          <input id="operator" class="input" name="operator" type="text"
+                 autocomplete="name" placeholder="Your name" maxlength="48">
+        </div>
+      </div>
+
+      <p id="connect-error" class="notice" role="alert" hidden></p>
+
+      <div class="signature">
+        <button id="connect-submit" class="btn btn-primary btn-lg" type="submit">Request access</button>
+        <p class="signature-note">
+          The client sees your name and decides for themselves. Nothing is sent until they agree.
+        </p>
+      </div>
+    </form>
+
+    <aside class="chain">
+      <h2 class="label">How this works</h2>
+      <ol class="chain-list">
+        <li><span class="chain-num num">1</span><span>The client opens Desky and reads you the number and password.</span></li>
+        <li><span class="chain-num num">2</span><span>You enter them here and request access.</span></li>
+        <li><span class="chain-num num">3</span><span>Your name appears on their screen. They press Allow.</span></li>
+        <li><span class="chain-num num">4</span><span>The session runs. They see everything and can end it at any moment.</span></li>
+      </ol>
+      <p class="chain-foot">
+        Screen and control travel directly between your two computers.
+        The server introduces you and then steps out of the way.
+      </p>
+    </aside>
+  </main>
+</div>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Waiting for the client's answer                                     -->
+<!-- ------------------------------------------------------------------ -->
+
+<div id="view-waiting" class="view view-waiting" hidden>
+  <div class="waiting-body">
+    <p class="label">Request sent</p>
+    <h1 id="waiting-host">Client’s computer</h1>
+    <p class="waiting-text">
+      Waiting for the client to press Allow on their screen.
+      If they cannot see the window, ask them to open Desky.
+    </p>
+    <div class="waiting-feed" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <button id="waiting-cancel" class="btn" type="button">Cancel the request</button>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Live session                                                        -->
+<!-- ------------------------------------------------------------------ -->
+
+<div id="view-session" class="view view-session" hidden>
+  <div class="stage">
+    <video id="screen" class="screen" autoplay playsinline muted></video>
+
+    <div id="session-overlay" class="overlay" hidden>
+      <p class="label">Connection</p>
+      <h2 id="overlay-title">Setting up a direct channel</h2>
+      <p id="overlay-text" class="waiting-text"></p>
+    </div>
+  </div>
+
+  <div id="toolbar" class="toolbar">
+    <div class="toolbar-row">
+      <div class="toolbar-identity">
+        <span id="session-host" class="session-host">Client’s computer</span>
+        <span id="session-code" class="data session-code"></span>
+      </div>
+
+      <dl class="readout">
+        <div><dt>Elapsed</dt><dd id="m-time" class="num">00:00</dd></div>
+        <div><dt>Latency</dt><dd id="m-rtt" class="num">—</dd></div>
+        <div><dt>Frames</dt><dd id="m-fps" class="num">—</dd></div>
+        <div><dt>Bitrate</dt><dd id="m-bitrate" class="num">—</dd></div>
+        <div><dt>Screen</dt><dd id="m-size" class="num">—</dd></div>
+      </dl>
+
+      <span id="m-path" class="state state-idle">No channel yet</span>
+      <span id="view-only" class="state state-warn" hidden>View only — the client has not granted control</span>
+
+      <div class="toolbar-actions">
+        <button id="btn-displays" class="btn btn-quiet btn-icon" type="button" title="Choose a display" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#ico-displays"/></svg>
+        </button>
+        <button id="btn-quality" class="btn btn-quiet btn-icon" type="button" title="Quality" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#ico-gauge"/></svg>
+        </button>
+        <button id="btn-clipboard" class="btn btn-quiet btn-icon" type="button" title="Clipboard" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#ico-clipboard"/></svg>
+        </button>
+        <button id="btn-keys" class="btn btn-quiet btn-icon" type="button" title="System shortcuts" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#ico-keyboard"/></svg>
+        </button>
+        <button id="btn-fullscreen" class="btn btn-quiet btn-icon" type="button" title="Fullscreen">
+          <svg class="ico" aria-hidden="true"><use href="#ico-expand"/></svg>
+        </button>
+      </div>
+
+      <button id="btn-hangup" class="btn btn-seal" type="button">
+        <svg class="ico" aria-hidden="true"><use href="#ico-power"/></svg>
+        Disconnect
+      </button>
+    </div>
+  </div>
+
+  <div id="pop-displays" class="pop" hidden role="menu" aria-label="Displays"></div>
+
+  <div id="pop-quality" class="pop" hidden role="menu" aria-label="Quality">
+    <button class="pop-item" type="button" role="menuitemradio" data-quality="max">
+      <span>Maximum</span><span class="pop-hint num">60 fps · up to 4K · 40 Mbit/s</span>
+    </button>
+    <button class="pop-item" type="button" role="menuitemradio" data-quality="balanced">
+      <span>Balanced</span><span class="pop-hint num">30 fps · 1080p · 12 Mbit/s</span>
+    </button>
+    <button class="pop-item" type="button" role="menuitemradio" data-quality="eco">
+      <span>Low bandwidth</span><span class="pop-hint num">20 fps · 720p · 3 Mbit/s</span>
+    </button>
+  </div>
+
+  <div id="pop-clipboard" class="pop pop-wide" hidden aria-label="Clipboard">
+    <label class="label" for="clip-text">Text</label>
+    <textarea id="clip-text" class="input clip-text" rows="5" spellcheck="false"
+              placeholder="Pull text from the client’s computer, or send them yours"></textarea>
+    <div class="pop-actions">
+      <button id="clip-pull" class="btn" type="button">Pull from client</button>
+      <button id="clip-push" class="btn btn-primary" type="button">Send to client</button>
+    </div>
+    <p class="pop-note">The client sees in their panel that you touched the clipboard.</p>
+  </div>
+
+  <div id="pop-keys" class="pop pop-keys" hidden role="menu" aria-label="System shortcuts">
+    <p class="pop-note pop-note-top">Your own Mac takes these before the page sees them. Send them from here instead.</p>
+    <button class="pop-item" type="button" role="menuitem" data-combo="language"><span>Switch language</span><span class="pop-hint">Ctrl + Space</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="shot-area"><span>Screenshot, area</span><span class="pop-hint">Cmd + Shift + 4</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="shot-screen"><span>Screenshot, whole screen</span><span class="pop-hint">Cmd + Shift + 3</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="copy"><span>Copy</span><span class="pop-hint">Cmd + C</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="paste"><span>Paste</span><span class="pop-hint">Cmd + V</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="select-all"><span>Select all</span><span class="pop-hint">Cmd + A</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="undo"><span>Undo</span><span class="pop-hint">Cmd + Z</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="spotlight"><span>Spotlight search</span><span class="pop-hint">Cmd + Space</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="switch-app"><span>Switch app</span><span class="pop-hint">Cmd + Tab</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="quit"><span>Quit app</span><span class="pop-hint">Cmd + Q</span></button>
+    <button class="pop-item" type="button" role="menuitem" data-combo="escape"><span>Escape</span></button>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Session ended                                                       -->
+<!-- ------------------------------------------------------------------ -->
+
+<div id="view-ended" class="view view-waiting" hidden>
+  <div class="waiting-body">
+    <p class="label">Session ended</p>
+    <h1 id="ended-title">Connection closed</h1>
+    <dl id="ended-summary" class="ended-summary"></dl>
+    <button id="ended-back" class="btn btn-primary" type="button">Back to connecting</button>
+  </div>
+</div>
+
+<script type="module" src="/console.js"></script>
+</body>
+</html>

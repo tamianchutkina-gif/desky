@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desky — песочница иконки</title>
+<style>
+  :root { color-scheme: light dark; --ui: #f6f4ef; --ui2: #ffffff; --tx: #1e1d1a; --mut: #6f6a5f; --br: #d8d3c6; }
+  @media (prefers-color-scheme: dark) { :root { --ui: #171614; --ui2: #201f1c; --tx: #e9e5dd; --mut: #948e7c; --br: #34322c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px; background: var(--ui); color: var(--tx);
+         font: 14px/1.45 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  .hint { font-size: 12.5px; color: var(--mut); margin: 0 0 18px; }
+  .wrap { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+  .stage { background: var(--ui2); border: 1px solid var(--br); border-radius: 12px; padding: 18px; }
+  #big { display: block; cursor: grab; border-radius: 22%; touch-action: none; }
+  #big.drag { cursor: grabbing; }
+  .sizes { display: flex; gap: 14px; align-items: flex-end; margin-top: 16px; }
+  .sizes svg { border-radius: 22%; display: block; }
+  .sizes figure { margin: 0; text-align: center; }
+  .sizes figcaption { font-size: 11px; color: var(--mut); margin-top: 5px; }
+  .panel { flex: 1 1 320px; min-width: 300px; display: flex; flex-direction: column; gap: 16px; }
+  fieldset { border: 1px solid var(--br); border-radius: 10px; padding: 12px 14px 14px; margin: 0; background: var(--ui2); }
+  legend { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--mut); padding: 0 5px; }
+  .ctl { display: grid; grid-template-columns: 132px 1fr 52px; gap: 8px; align-items: center; margin-top: 8px; }
+  .ctl label { font-size: 12.5px; }
+  .ctl output { font-size: 12px; color: var(--mut); text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; }
+  .cols { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+  .col { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+  input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--br); border-radius: 5px; background: none; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px; cursor: pointer;
+           border: 1px solid var(--br); background: var(--ui2); color: inherit; }
+  button.primary { background: var(--tx); color: var(--ui); border-color: transparent; }
+  textarea { width: 100%; height: 128px; font: 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+             border: 1px solid var(--br); border-radius: 8px; padding: 9px; background: var(--ui2); color: inherit; resize: vertical; }
+</style>
+</head>
+<body>
+<h1>Desky — песочница иконки</h1>
+<p class="hint">Курсор таскается мышью прямо по холсту. Всё остальное — ползунками. Слева видно, как это выглядит в доке.</p>
+
+<div class="wrap">
+  <div class="stage">
+    <svg id="big" width="360" height="360" viewBox="0 0 1024 1024"></svg>
+    <div class="sizes">
+      <figure><svg id="p128" width="128" height="128" viewBox="0 0 1024 1024"></svg><figcaption>128</figcaption></figure>
+      <figure><svg id="p48" width="48" height="48" viewBox="0 0 1024 1024"></svg><figcaption>48</figcaption></figure>
+      <figure><svg id="p26" width="26" height="26" viewBox="0 0 1024 1024"></svg><figcaption>26</figcaption></figure>
+      <figure><svg id="p16" width="16" height="16" viewBox="0 0 1024 1024"></svg><figcaption>16</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="panel">
+    <fieldset>
+      <legend>Цвета</legend>
+      <div class="cols">
+        <span class="col"><input type="color" id="cBg" value="#212120"> фон</span>
+        <span class="col"><input type="color" id="cLet" value="#e0a03a"> буква</span>
+        <span class="col"><input type="color" id="cCur" value="#ffffff"> курсор</span>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Курсор</legend>
+      <div class="ctl"><label for="cs">Размер</label><input type="range" id="cs" min="0.4" max="1.8" step="0.01" value="0.82"><output id="cs_o"></output></div>
+      <div class="ctl"><label for="cr">Поворот</label><input type="range" id="cr" min="-45" max="45" step="1" value="0"><output id="cr_o"></output></div>
+      <div class="ctl"><label for="ct">Толщина хвоста</label><input type="range" id="ct" min="16" max="90" step="1" value="44"><output id="ct_o"></output></div>
+      <div class="ctl"><label for="ch">Раствор головы</label><input type="range" id="ch" min="28" max="62" step="1" value="45"><output id="ch_o"></output></div>
+      <div class="ctl"><label for="co">Обводка</label><input type="range" id="co" min="0" max="60" step="1" value="26"><output id="co_o"></output></div>
+      <div class="ctl"><label for="cx">Сдвиг по X</label><input type="range" id="cx" min="0" max="1024" step="1" value="548"><output id="cx_o"></output></div>
+      <div class="ctl"><label for="cy">Сдвиг по Y</label><input type="range" id="cy" min="0" max="1024" step="1" value="458"><output id="cy_o"></output></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Буква</legend>
+      <div class="ctl"><label for="lx">Левый край</label><input type="range" id="lx" min="150" max="380" step="1" value="262"><output id="lx_o"></output></div>
+      <div class="ctl"><label for="la">Ось чаши</label><input type="range" id="la" min="330" max="560" step="1" value="450"><output id="la_o"></output></div>
+      <div class="ctl"><label for="lr">Радиус чаши</label><input type="range" id="lr" min="180" max="330" step="1" value="296"><output id="lr_o"></output></div>
+      <div class="ctl"><label for="lt">Толщина штриха</label><input type="range" id="lt" min="40" max="170" step="1" value="84"><output id="lt_o"></output></div>
+      <div class="ctl"><label for="lh">Утоньшение горизонталей, %</label><input type="range" id="lh" min="0" max="20" step="0.5" value="9.5"><output id="lh_o"></output></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Холст</legend>
+      <div class="ctl"><label for="pad">Поле вокруг марки</label><input type="range" id="pad" min="60" max="300" step="2" value="216"><output id="pad_o"></output></div>
+      <div class="ctl"><label for="rx">Скругление</label><input type="range" id="rx" min="0" max="512" step="4" value="228"><output id="rx_o"></output></div>
+    </fieldset>
+
+    <div class="btns">
+      <button class="primary" id="dl">Скачать SVG</button>
+      <button id="cp">Скопировать код</button>
+      <button id="rs">Сбросить</button>
+    </div>
+    <textarea id="src" readonly spellcheck="false"></textarea>
+  </div>
+</div>
+
+<script>
+(function () {
+  var DEF = { bg:'#212120', let:'#e0a03a', cur:'#ffffff', cs:0.82, cr:0, ct:44, ch:45, co:26,
+              cx:548, cy:458, lx:262, la:450, lr:296, lt:84, lh:9.5, pad:216, rx:228 };
+  var st = Object.assign({}, DEF);
+
+  var ids = { cBg:'bg', cLet:'let', cCur:'cur', cs:'cs', cr:'cr', ct:'ct', ch:'ch', co:'co',
+              cx:'cx', cy:'cy', lx:'lx', la:'la', lr:'lr', lt:'lt', lh:'lh', pad:'pad', rx:'rx' };
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Внешняя чаша — настоящая окружность, поэтому стем и правый бок несут
+  // полную толщину lt. Просвет — эллипс: rx оставляет бок нетронутым, ry
+  // подтягивает просвет к верхнему и нижнему краю и утоньшает именно
+  // перекладины. Равный по геометрии штрих в горизонтали читается тяжелее,
+  // чем в вертикали, и наборный шрифт снимает с неё 8-12%.
+  function letterPath(s) {
+    var ht = Math.round(s.lt * (1 - s.lh / 100));
+    var top = 512 - s.lr, run = s.la - s.lx;
+    var irx = s.lr - s.lt, iry = s.lr - ht, irun = s.la - s.lx - s.lt;
+    return 'M ' + s.lx + ' ' + top + ' h' + run + ' a' + s.lr + ' ' + s.lr + ' 0 0 1 0 ' + (2 * s.lr) + ' h-' + run + ' z '
+         + 'M ' + (s.lx + s.lt) + ' ' + (512 - iry) + ' h' + irun + ' a' + irx + ' ' + iry + ' 0 0 1 0 ' + (2 * iry) + ' h-' + irun + ' z';
+  }
+  // Указатель строится геометрически: рёбра головы равной длины,
+  // хвост идёт строго по биссектрисе угла между ними, углы хвоста —
+  // зеркальные отражения относительно этой оси. Иначе стрелку ведёт вбок.
+  function cursorPath(w, theta) {
+    var t = (theta || 45) * Math.PI / 180;
+    var ax = Math.sin(t), ay = 1 + Math.cos(t), n = Math.hypot(ax, ay);
+    ax /= n; ay /= n;                       // ось (биссектриса)
+    var qx = ay, qy = -ax;                  // перпендикуляр к оси
+    var EDGE = 290, BASE = 250, TAIL = 150, h = w / 2;
+    var f = function (v) { return +v.toFixed(1); };
+    var pl = [0, EDGE], pr = [Math.sin(t) * EDGE, Math.cos(t) * EDGE];
+    var c = [ax * BASE, ay * BASE], e = [ax * (BASE + TAIL), ay * (BASE + TAIL)];
+    return 'M 0 0'
+      + ' L ' + f(pl[0]) + ' ' + f(pl[1])
+      + ' L ' + f(c[0] - qx * h) + ' ' + f(c[1] - qy * h)
+      + ' L ' + f(e[0] - qx * h) + ' ' + f(e[1] - qy * h)
+      + ' L ' + f(e[0] + qx * h) + ' ' + f(e[1] + qy * h)
+      + ' L ' + f(c[0] + qx * h) + ' ' + f(c[1] + qy * h)
+      + ' L ' + f(pr[0]) + ' ' + f(pr[1]) + ' Z';
+  }
+  // Марка (буква + курсор) центрируется и масштабируется так, чтобы
+  // поле до края холста равнялось pad. Размер буквы относительно курсора
+  // при этом не меняется — сжимается именно графитовое поле.
+  function markScale(s) { return (512 - s.pad) / s.lr; }
+  function markShift(s) { return (s.lx + s.la + s.lr) / 2; }
+
+  function body(s) {
+    var k = markScale(s), cx = markShift(s);
+    var stroke = s.co > 0
+      ? ' stroke="' + s.bg + '" stroke-width="' + (s.co / (s.cs * k)).toFixed(1) + '" stroke-linejoin="round"' : '';
+    return '<g id="background"><rect width="1024" height="1024" rx="' + s.rx + '" fill="' + s.bg + '"/></g>'
+      + '<g id="mark" transform="translate(512 512) scale(' + k.toFixed(4) + ') translate(' + (-cx) + ' -512)">'
+      + '<g id="letter"><path fill="' + s.let + '" fill-rule="evenodd" d="' + letterPath(s) + '"/></g>'
+      + '<g id="cursor" transform="translate(' + s.cx + ' ' + s.cy + ') rotate(' + s.cr + ') scale(' + s.cs + ')">'
+      + '<path fill="' + s.cur + '"' + stroke + ' d="' + cursorPath(s.ct, s.ch) + '"/></g></g>';
+  }
+
+  function fullSvg(s) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">\n'
+      + '  <title>Desky</title>\n  ' + body(s).replace(/></g, '>\n  <') + '\n</svg>\n';
+  }
+
+  function render() {
+    var b = body(st);
+    ['big', 'p128', 'p48', 'p26', 'p16'].forEach(function (id) { $(id).innerHTML = b; });
+    $('src').value = fullSvg(st);
+    Object.keys(ids).forEach(function (el) {
+      var o = $(el + '_o');
+      if (o) o.value = st[ids[el]];
+    });
+  }
+
+  Object.keys(ids).forEach(function (el) {
+    var node = $(el);
+    node.addEventListener('input', function () {
+      var v = node.value;
+      st[ids[el]] = node.type === 'range' ? parseFloat(v) : v;
+      render();
+    });
+  });
+
+  // Курсор таскается мышью: точка нажатия становится остриём.
+  var big = $('big'), dragging = false;
+  function place(ev) {
+    var r = big.getBoundingClientRect();
+    var k = markScale(st), cx = markShift(st);
+    st.cx = Math.round(((ev.clientX - r.left) / r.width * 1024 - 512) / k + cx);
+    st.cy = Math.round(((ev.clientY - r.top) / r.height * 1024 - 512) / k + 512);
+    $('cx').value = st.cx; $('cy').value = st.cy;
+    render();
+  }
+  big.addEventListener('pointerdown', function (ev) {
+    dragging = true; big.classList.add('drag'); big.setPointerCapture(ev.pointerId); place(ev);
+  });
+  big.addEventListener('pointermove', function (ev) { if (dragging) place(ev); });
+  big.addEventListener('pointerup', function () { dragging = false; big.classList.remove('drag'); });
+
+  $('dl').onclick = function () {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([fullSvg(st)], { type: 'image/svg+xml' }));
+    a.download = 'desky-icon.svg';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  };
+  $('cp').onclick = function () {
+    $('src').select();
+    try { document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard) navigator.clipboard.writeText(fullSvg(st)).catch(function () {});
+    $('cp').textContent = 'Скопировано';
+    setTimeout(function () { $('cp').textContent = 'Скопировать код'; }, 1400);
+  };
+  $('rs').onclick = function () {
+    st = Object.assign({}, DEF);
+    Object.keys(ids).forEach(function (el) { $(el).value = st[ids[el]]; });
+    render();
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
