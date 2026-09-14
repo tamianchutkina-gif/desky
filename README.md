@@ -1,6 +1,6 @@
 # Desky
 
-[![tests](https://github.com/tamianchutkina-gif/desky-oss/actions/workflows/test.yml/badge.svg)](https://github.com/tamianchutkina-gif/desky-oss/actions/workflows/test.yml)
+[![tests](https://github.com/tamianchutkina-gif/desky/actions/workflows/test.yml/badge.svg)](https://github.com/tamianchutkina-gif/desky/actions/workflows/test.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Remote support: you connect to a client's computer and work on it as if you
