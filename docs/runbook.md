@@ -1,8 +1,9 @@
 # Runbook
 
-Day-to-day operation. `README.md` explains what Desky is, how to build it
-and how to deploy it; this file is what you actually do with it once both
-are true.
+Day-to-day operation. `README.md` explains what Desky is, `deploy.md` how
+to put a server up and `macos-distribution.md` how to get the agent onto a
+client's Mac; this file is what you actually do with it once all of that is
+true.
 
 Everything here assumes the live deployment: console at
 <https://desky.example.com>, agents at `wss://desky.example.com/signal`.
