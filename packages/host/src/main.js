@@ -77,7 +77,9 @@ let borderWindow = null;
 let engineReady = false;
 let pendingEngineStart = null;
 let pendingRequest = null;
+let verifyingRequest = false;
 let activeSession = null;
+let killSwitchRegistered = false;
 let selectedDisplayId = null;
 let connectionStatus = 'offline';
 let lastStats = null;
@@ -161,7 +163,11 @@ async function boot() {
     pushPanelState({ detail });
   });
   signaling.on('open', () => registerWithServer());
-  signaling.on('message', handleSignalingMessage);
+  signaling.on('message', (msg) => {
+    handleSignalingMessage(msg).catch((err) => {
+      console.error('[main] handling a server message failed:', err);
+    });
+  });
   signaling.connect();
 
   app.on('activate', () => showPanel());
@@ -679,6 +685,7 @@ async function handleSignalingMessage(msg) {
           endSession('binding_failed');
           break;
         }
+        activeSession.answered = true;
       }
 
       engineWindow?.webContents.send('engine:signal', { payload: msg.payload });
@@ -719,17 +726,27 @@ async function handleSignalingMessage(msg) {
  * could ring.
  */
 async function handleIncomingRequest(msg) {
-  if (activeSession || pendingRequest) {
+  // `verifyingRequest` covers the second or so the proof check takes:
+  // without it a second request arriving in that window passed the busy
+  // check, and whichever finished last overwrote the first's pending
+  // request and reset its timer. A hostile server can send two.
+  if (activeSession || pendingRequest || verifyingRequest) {
     signaling.send({ t: MSG.HOST_DECISION, sessionId: msg.sessionId, accept: false, reason: REJECT.BUSY });
     return;
   }
 
-  const valid = await identity.verify({
-    proof: msg.proof,
-    nonce: msg.nonce,
-    sessionId: msg.sessionId,
-    source: msg.operatorAddr,
-  });
+  verifyingRequest = true;
+  let valid;
+  try {
+    valid = await identity.verify({
+      proof: msg.proof,
+      nonce: msg.nonce,
+      sessionId: msg.sessionId,
+      source: msg.operatorAddr,
+    });
+  } finally {
+    verifyingRequest = false;
+  }
 
   if (!valid) {
     // "Wrong password" for a correct password is worse than unhelpful:
@@ -820,10 +837,24 @@ function acceptRequest() {
     quality: config.get('quality') || DEFAULT_QUALITY,
     password: identity.password,
     canControl,
+    answered: false,
     events: [],
   };
 
   captureDenied = false;
+
+  // Accepting starts screen capture, and the answer that turns capture
+  // into a session comes back through the server. A server that dies or
+  // stalls right after the acceptance would otherwise leave this machine
+  // recording indefinitely with nobody on the other end — the client
+  // sees the frame and can end it by hand, but should not have to.
+  const acceptedId = activeSession.id;
+  setTimeout(() => {
+    if (activeSession?.id === acceptedId && !activeSession.answered) {
+      console.warn('[main] no answer arrived within a minute of accepting — ending');
+      endSession('no_answer');
+    }
+  }, 60_000);
 
   if (canControl) {
     injector.enable({ ...display.bounds, scaleFactor: display.scaleFactor });
@@ -881,8 +912,14 @@ function acceptRequest() {
   if (engineReady) {
     startEngine();
   } else {
-    pendingEngineStart = () => { engineReady = true; startEngine(); };
-    ipcMain.once('engine:ready', pendingEngineStart);
+    pendingEngineStart = (event) => {
+      if (!fromEngine(event)) return;
+      ipcMain.removeListener('engine:ready', pendingEngineStart);
+      pendingEngineStart = null;
+      engineReady = true;
+      startEngine();
+    };
+    ipcMain.on('engine:ready', pendingEngineStart);
   }
 
   pushPanelState();
@@ -990,21 +1027,62 @@ function noteActivity(kind, detail) {
 function registerKillSwitch() {
   const accelerator = config.get('killSwitch');
   try {
-    globalShortcut.register(accelerator, () => {
+    // register() returns false, not an exception, when another app
+    // already owns the combination. The panel only advertises the hotkey
+    // when it is really there: a kill switch the client is told about
+    // and that does nothing is worse than none.
+    killSwitchRegistered = globalShortcut.register(accelerator, () => {
       if (activeSession) endSession('kill_switch');
       else if (pendingRequest) declineRequest();
       showPanel();
     });
+    if (!killSwitchRegistered) {
+      console.warn('[main] the hotkey %s is taken by another app; the panel will not show it', accelerator);
+    }
   } catch (err) {
+    killSwitchRegistered = false;
     console.warn('[main] could not register the hotkey:', err.message);
   }
 }
 
 /* ------------------------------------------------------------------ *
+ * IPC sender checks
+ * ------------------------------------------------------------------ */
+
+/**
+ * Every handler below checks which window sent the message. The engine
+ * renderer parses the operator's SDP and data channel traffic — it is
+ * the one process here that handles bytes from the other side — and a
+ * compromised renderer must not be able to read the password through
+ * `panel:state`, accept a request through `panel:accept`, or point the
+ * agent at another server. Preload bridges limit what each renderer can
+ * *send*; this limits what main will *act on*, per renderer.
+ */
+function isFrom(win, event) {
+  return Boolean(win) && !win.isDestroyed() && event.sender === win.webContents;
+}
+const fromEngine = (event) => isFrom(engineWindow, event);
+const fromPanel = (event) => isFrom(panelWindow, event);
+
+function guarded(check, channel, handler) {
+  return (event, ...args) => {
+    if (!check(event)) {
+      console.warn('[main] ignored %s from a window that must not send it', channel);
+      return undefined;
+    }
+    return handler(event, ...args);
+  };
+}
+const onEngine = (channel, handler) => ipcMain.on(channel, guarded(fromEngine, channel, handler));
+const onPanel = (channel, handler) => ipcMain.on(channel, guarded(fromPanel, channel, handler));
+const handleEngine = (channel, handler) => ipcMain.handle(channel, guarded(fromEngine, channel, handler));
+const handlePanel = (channel, handler) => ipcMain.handle(channel, guarded(fromPanel, channel, handler));
+
+/* ------------------------------------------------------------------ *
  * Engine IPC
  * ------------------------------------------------------------------ */
 
-ipcMain.on('engine:ready', () => { engineReady = true; });
+onEngine('engine:ready', () => { engineReady = true; });
 
 /**
  * Signs this machine's own DTLS fingerprint with the session password
@@ -1015,7 +1093,14 @@ ipcMain.on('engine:ready', () => { engineReady = true; });
  * and sit in the middle of a session both ends believe is direct. It
  * never learns the password, so it cannot sign a fingerprint it owns.
  */
-ipcMain.on('engine:signal-out', async (_event, payload) => {
+onEngine('engine:signal-out', (_event, payload) => {
+  forwardSignalOut(payload).catch((err) => {
+    console.error('[main] could not sign the offer:', err);
+    if (activeSession) endSession('connection_failed');
+  });
+});
+
+async function forwardSignalOut(payload) {
   if (!activeSession || !payload) return;
   const sessionId = activeSession.id;
 
@@ -1037,9 +1122,9 @@ ipcMain.on('engine:signal-out', async (_event, payload) => {
   // The session can end while the binding is being computed.
   if (activeSession?.id !== sessionId) return;
   signaling.send({ t: MSG.SIGNAL, sessionId, payload });
-});
+}
 
-ipcMain.on('engine:state', (_event, payload) => {
+onEngine('engine:state', (_event, payload) => {
   if (payload?.state === 'capture-ended' && activeSession) {
     endSession('capture_ended');
     return;
@@ -1063,7 +1148,7 @@ ipcMain.on('engine:state', (_event, payload) => {
   pushPanelState({ engineState: payload?.state });
 });
 
-ipcMain.on('engine:stats', (_event, stats) => {
+onEngine('engine:stats', (_event, stats) => {
   lastStats = stats;
   pushPanelState();
   pushBorderState();
@@ -1075,15 +1160,24 @@ ipcMain.on('engine:stats', (_event, stats) => {
  * No queue, no batching: this is the path the operator feels, and every
  * millisecond spent here is a millisecond of lag on their cursor.
  */
-ipcMain.on('engine:input', (_event, buffer) => {
+onEngine('engine:input', (_event, buffer) => {
   if (!activeSession) return;
   const frame = decodeInput(buffer);
   if (!frame) return;
-  const tag = injector.apply(frame);
+  let tag;
+  try {
+    tag = injector.apply(frame);
+  } catch (err) {
+    // The native binding throws for keys the current layout cannot
+    // produce, among other things. One bad frame is dropped; it must not
+    // take the main process down with the session running.
+    console.warn('[main] the injector refused a frame:', err.message);
+    return;
+  }
   if (tag) markActivity(tag);
 });
 
-ipcMain.on('engine:control', (_event, msg) => {
+onEngine('engine:control', (_event, msg) => {
   if (!activeSession || !msg) return;
 
   switch (msg.t) {
@@ -1153,7 +1247,7 @@ ipcMain.on('engine:control', (_event, msg) => {
   }
 });
 
-ipcMain.handle('engine:list-displays', () => listDisplays());
+handleEngine('engine:list-displays', () => listDisplays());
 
 /**
  * Coalesced activity signal.
@@ -1200,22 +1294,22 @@ function markActivity(tag) {
 // The renderer says when it can receive. Pushing before that races the
 // script and leaves every section hidden — a blank window that looks
 // exactly like a hang.
-ipcMain.on('panel:ready', () => pushPanelState());
+onPanel('panel:ready', () => pushPanelState());
 
-ipcMain.handle('panel:state', () => panelState());
-ipcMain.on('panel:accept', () => acceptRequest());
-ipcMain.on('panel:decline', () => declineRequest());
-ipcMain.on('panel:end', () => endSession('client_ended'));
-ipcMain.on('panel:rotate-password', () => {
+handlePanel('panel:state', () => panelState());
+onPanel('panel:accept', () => acceptRequest());
+onPanel('panel:decline', () => declineRequest());
+onPanel('panel:end', () => endSession('client_ended'));
+onPanel('panel:rotate-password', () => {
   identity.rotatePassword();
   pushPanelState();
 });
-ipcMain.on('panel:set-name', (_event, name) => {
+onPanel('panel:set-name', (_event, name) => {
   identity.setName(name);
   if (signaling.connected) registerWithServer();
   pushPanelState();
 });
-ipcMain.on('panel:set-server', (_event, value) => {
+onPanel('panel:set-server', (_event, value) => {
   const url = normalizeServerUrl(value);
   if (!url) {
     const plaintext = /^(ws|http):\/\//i.test(String(value ?? '').trim());
@@ -1230,20 +1324,21 @@ ipcMain.on('panel:set-server', (_event, value) => {
   signaling.setUrl(url);
   pushPanelState();
 });
-ipcMain.on('panel:set-launch-at-login', (_event, enabled) => {
+onPanel('panel:set-launch-at-login', (_event, enabled) => {
   config.set('launchAtLogin', Boolean(enabled));
   applyLaunchAtLogin();
   pushPanelState();
 });
-ipcMain.on('panel:open-logs', () => log.reveal());
-ipcMain.handle('panel:history', () => log.recent(40));
-ipcMain.on('panel:request-permission', async (_event, which) => {
+onPanel('panel:open-logs', () => log.reveal());
+handlePanel('panel:history', () => log.recent(40));
+onPanel('panel:request-permission', (_event, which) => {
   if (which === 'accessibility') requestAccessibility();
-  await openPermissionPane(which);
-  pushPanelState();
+  openPermissionPane(which)
+    .catch((err) => console.warn('[main] could not open the permission pane:', err.message))
+    .finally(() => pushPanelState());
 });
-ipcMain.on('panel:relaunch', () => relaunch());
-ipcMain.on('panel:quit', () => {
+onPanel('panel:relaunch', () => relaunch());
+onPanel('panel:quit', () => {
   app.isQuitting = true;
   if (activeSession) endSession('agent_quit');
   app.quit();
@@ -1273,7 +1368,7 @@ function panelState() {
     needsPermissions: NEEDS_PERMISSIONS,
     injectorAvailable: InputInjector.available,
     captureDenied,
-    killSwitchLabel: humanAccelerator(config.get('killSwitch')),
+    killSwitchLabel: killSwitchRegistered ? humanAccelerator(config.get('killSwitch')) : null,
     locked: identity.locked,
     lockRemainingMs: identity.lockRemainingMs,
     displays: listDisplays(),

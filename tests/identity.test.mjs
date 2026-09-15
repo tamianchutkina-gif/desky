@@ -49,16 +49,17 @@ test('three wrong proofs lock the machine for a minute', async () => {
   assert.ok(identity.lockRemainingMs <= 60_000);
 });
 
-test('the password rotates when the machine locks, and the lockout survives it', async () => {
+test('a stranger guessing at the password cannot change it', async () => {
   const identity = freshIdentity();
   const original = identity.password;
 
-  for (const label of ['a', 'b', 'c']) {
+  for (const label of ['a', 'b', 'c', 'd', 'e', 'f']) {
     await identity.verify({ proof: BAD_PROOF, nonce: nonceFor(label), sessionId: label });
   }
 
-  assert.notEqual(identity.password, original, 'a guessed-at password does not get a second life');
-  assert.equal(identity.locked, true, 'rotating must not clear the lockout it was set alongside');
+  assert.equal(identity.password, original,
+    'rotating on failures let anyone with the id change the password every minute — a denial of service, not a defence');
+  assert.equal(identity.locked, true, 'the guesser is still locked out');
 });
 
 test('even a correct proof is refused while locked', async () => {
@@ -185,9 +186,9 @@ test('a stranger cannot lock out the operator who has the password', async () =>
 
   assert.equal(identity.lockedFor('198.51.100.7'), true, 'the guesser pays for the guesses');
   assert.equal(identity.lockedFor('203.0.113.4'), false, 'the honest operator must not inherit that lock');
-  assert.notEqual(identity.password, firstPassword, 'a guessed-at password is dead for everyone');
+  assert.equal(identity.password, firstPassword, 'the guesses must not cost the client a new password either');
 
-  // The client reads the new password out, and the operator gets in at once.
+  // The operator, holding the password the client already read out, gets in at once.
   const nonce = nonceFor('d');
   const proof = await computeProof(identity.password, nonce, identity.code, 's-d');
   assert.equal(

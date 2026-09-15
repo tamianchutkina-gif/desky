@@ -23,7 +23,6 @@ data/
 
 .git/
 .gitignore
-.impeccable/
 tests/
 scripts/
 infra/

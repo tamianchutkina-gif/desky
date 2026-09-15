@@ -23,7 +23,7 @@ import { InputCapture, lockKeyboard, unlockKeyboard, COMBOS } from '/input.js';
  * Operator console.
  *
  * Owns four views and one peer connection. The host agent is the
- * offerer — it holds the media and both data channels — so this side
+ * offerer — it holds the media and the data channels — so this side
  * answers and then mostly listens.
  */
 

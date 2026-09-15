@@ -1,15 +1,24 @@
 {
   "name": "desky",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "description": "Self-hosted remote desktop — consent-first, peer-to-peer, no session limits.",
+  "license": "MIT",
+  "author": "Tamilya Anchutkina",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamianchutkina-gif/desky.git"
+  },
+  "homepage": "https://github.com/tamianchutkina-gif/desky#readme",
+  "bugs": {
+    "url": "https://github.com/tamianchutkina-gif/desky/issues"
+  },
   "workspaces": [
     "packages/server",
     "packages/host"
   ],
   "scripts": {
-    "install:all": "npm install",
     "server": "npm run start --workspace=@desky/server",
     "server:dev": "npm run dev --workspace=@desky/server",
     "host": "npm run start --workspace=@desky/host",
@@ -17,12 +26,12 @@
     "dist:mac:universal": "npm run dist:mac:universal --workspace=@desky/host",
     "sync": "node scripts/sync-shared.mjs",
     "pretest": "node scripts/sync-shared.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test 'tests/*.test.mjs'",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "publish:mac": "./scripts/publish-mac.sh"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.11"
   }
 }

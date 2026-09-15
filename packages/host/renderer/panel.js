@@ -119,9 +119,10 @@ function renderReady() {
   locked.hidden = !state.locked;
   if (state.locked) {
     const seconds = Math.ceil((state.lockRemainingMs ?? 0) / 1000);
-    locked.textContent = 'Someone entered the wrong password several times, so it has been '
-      + `changed and connections are blocked for another ${seconds}s. `
-      + 'Read out the new password once the block lifts.';
+    locked.textContent = 'Someone entered the wrong password several times, so their '
+      + `connections are blocked for another ${seconds}s. `
+      + 'Your password has not changed; if the person you are talking to is the one '
+      + 'who mistyped it, read it out again once the block lifts.';
   }
 
   const el = $('ready-state');

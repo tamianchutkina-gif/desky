@@ -209,7 +209,7 @@ There are no cards and no shadows anywhere in the system. Structure comes from r
 - Seal red under a single-meaning law: control of this machine is released to someone else
 - Every measured value in PT Mono with tabular figures, in a fixed character cell
 - Motion is sheet feed: 150ms, linear, state-change only — nothing pulses, breathes, or eases
-- Interface copy is entirely Russian; both faces are self-hosted with Cyrillic subsets
+- Interface copy is English today and must set Cyrillic tomorrow; both faces are self-hosted with Latin and Cyrillic subsets
 
 ## Colors
 
@@ -276,7 +276,7 @@ The scale is fixed steps, not fluid: 0.6875 / 0.8125 / 0.9375 / 1.0625 / 1.375 /
 
 **The Fixed-Step Rule.** The shared type scale does not clamp. A heading that shrinks inside a 460px panel reads worse than one that simply reflows onto a second line, so narrow layouts change structure and never type size.
 
-**The Cyrillic-First Rule.** All interface copy is Russian, and both faces ship self-hosted with the Cyrillic subset loaded first. Never introduce a face without Cyrillic coverage, and never set a Russian label in a tracking so tight that its descenders and Cyrillic breves collide.
+**The Cyrillic-Ready Rule.** Interface copy is English today, but the clients it is read to are not all English speakers, and every label must survive translation. Both faces ship self-hosted with Latin and Cyrillic subsets. Never introduce a face without Cyrillic coverage, and never set a label in a tracking so tight that descenders and Cyrillic breves would collide.
 
 ## Layout
 

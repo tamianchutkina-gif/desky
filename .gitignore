@@ -25,10 +25,6 @@ packages/host/src/build-config.json
 # The packaged agent published to clients — built on a Mac, not versioned.
 downloads/
 
-# Design and review scratch, and the archive made for one review pass.
-.impeccable/
-Desky-source-for-review.zip
-
 # Written by scripts/sync-shared.mjs from DESKY_SERVER at build time.
 # Committing it pins the tree to one deployment.
 /build-config.json

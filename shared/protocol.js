@@ -49,7 +49,7 @@ export const MSG = {
   ERROR: 'error',
 };
 
-/** Reasons a connection attempt can fail. Rendered to Russian text by the UIs. */
+/** Reasons a connection attempt can fail. Rendered to text by the UIs. */
 export const REJECT = {
   BAD_CODE: 'bad_code',
   BAD_PASSWORD: 'bad_password',
@@ -577,6 +577,7 @@ export function endedText(reason) {
     case 'capture_ended': return 'The shared screen went away — a monitor was unplugged, slept, or sharing was stopped';
     case 'capture_denied': return 'macOS stopped the screen recording on the client’s machine';
     case 'connection_failed': return 'The connection between your two computers failed';
+    case 'no_answer': return 'The operator’s side never connected after the request was allowed';
     case 'engine_crashed': return 'The client’s agent hit an error and stopped';
     case 'binding_failed': return 'The client’s machine could not confirm who was connecting';
     case 'no_fingerprint': return 'The connection could not be secured and was stopped';

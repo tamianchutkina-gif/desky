@@ -1,8 +1,8 @@
 # Runbook
 
-Day-to-day operation. `README.md` explains what Desky is and how to build it,
-`README.md` covers deploying one; this file is what you actually do
-with it once both are true.
+Day-to-day operation. `README.md` explains what Desky is, how to build it
+and how to deploy it; this file is what you actually do with it once both
+are true.
 
 Everything here assumes the live deployment: console at
 <https://desky.example.com>, agents at `wss://desky.example.com/signal`.
@@ -92,16 +92,16 @@ TURN secret from the first run.
 Changing anything the client runs — the agent, the panel, **the icon**:
 
 ```bash
-gh repo clone tamianchutkina-gif/desky ~/desky-build -- --depth 1
-cd ~/desky-build && npm install
+git clone --depth 1 https://github.com/tamianchutkina-gif/desky.git ~/desky-build
+cd ~/desky-build && npm ci
 DESKY_SERVER=wss://desky.example.com/signal npm run dist:mac:universal
 ./scripts/publish-mac.sh root@203.0.113.10 desky.example.com
 ```
 
-**Build from that local clone, not from the working copy.** The working copy
-is inside Google Drive, and packaging there hangs rather than finishing —
-`CLAUDE.md` has the measurement and the reason. From a local clone the same
-build takes about two minutes.
+**Build from a local clone, not from a folder a cloud file provider syncs.**
+Packaging inside Google Drive or iCloud Drive hangs rather than finishing —
+`CLAUDE.md` has the reason. From a local clone the same build takes about
+two minutes.
 
 The agent is published separately from the code and does not travel with
 `npm run deploy`. Until `publish-mac.sh` runs, clients keep installing the

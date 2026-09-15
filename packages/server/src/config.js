@@ -84,6 +84,14 @@ export const config = {
   maxAuthFailures: num('MAX_AUTH_FAILURES', 5),
   authLockoutMs: num('AUTH_LOCKOUT_MS', 5 * 60_000),
 
+  /**
+   * How long a run of failures short of the limit is remembered. In
+   * production it is the lockout itself; the tests separate the two so
+   * that a short lockout does not also mean a counter that forgets
+   * between one slow guess and the next.
+   */
+  authFailureWindowMs: num('AUTH_FAILURE_WINDOW_MS', num('AUTH_LOCKOUT_MS', 5 * 60_000)),
+
   /** Connection attempts allowed per IP per minute. */
   attemptsPerMinute: num('ATTEMPTS_PER_MINUTE', 30),
 

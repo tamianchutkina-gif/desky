@@ -44,11 +44,11 @@ printf '\n%sDesky%s %s— installing the support agent%s\n' "$bold" "$off" "$dim
 
 [ "$(uname -s)" = "Darwin" ] || die "This installer is for macOS. This machine reports $(uname -s)."
 
-# 12 is the oldest release the packaged Electron runtime supports; below
-# it the app installs and then refuses to launch, which is the failure
-# this whole script exists to avoid.
+# 13 (Ventura) is the oldest release the packaged Electron runtime
+# supports; below it the app installs and then refuses to launch, which
+# is the failure this whole script exists to avoid.
 MAJOR=$(sw_vers -productVersion | cut -d. -f1)
-[ "$MAJOR" -ge 12 ] 2>/dev/null || die "Desky needs macOS 12 or newer. This machine has $(sw_vers -productVersion)."
+[ "$MAJOR" -ge 13 ] 2>/dev/null || die "Desky needs macOS 13 or newer. This machine has $(sw_vers -productVersion)."
 
 # Everything lands here first and is checked before anything in
 # /Applications is touched, so a failed download cannot leave the client

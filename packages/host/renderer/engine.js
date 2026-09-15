@@ -13,7 +13,7 @@ import {
  * to open one.
  *
  * The host is deliberately the offerer: it is the side that has media
- * and both data channels, so it describes the session and the operator
+ * and the data channels, so it describes the session and the operator
  * simply answers.
  */
 

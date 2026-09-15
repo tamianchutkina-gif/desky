@@ -20,7 +20,6 @@ const require = createRequire(import.meta.url);
  */
 const PLATFORM_BINDING = {
   darwin: '@nut-tree-fork/libnut-darwin',
-  win32: '@nut-tree-fork/libnut-win32',
   linux: '@nut-tree-fork/libnut-linux',
 };
 
@@ -46,8 +45,6 @@ try {
 }
 
 const isMac = process.platform === 'darwin';
-const isWindows = process.platform === 'win32';
-
 
 /* ------------------------------------------------------------------ *
  * Key mapping
@@ -71,8 +68,8 @@ const NUMPAD = Object.fromEntries(
  * getting it wrong means every shortcut the operator knows silently
  * does nothing on the client's machine.
  */
-const META_LEFT = isMac ? 'cmd' : isWindows ? 'win' : 'meta';
-const META_RIGHT = isMac ? 'right_cmd' : isWindows ? 'right_win' : 'right_meta';
+const META_LEFT = isMac ? 'cmd' : 'meta';
+const META_RIGHT = isMac ? 'right_cmd' : 'right_meta';
 
 const KEY_MAP = {
   ...LETTERS,

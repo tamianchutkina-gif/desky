@@ -1,6 +1,5 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
 
 ## Platform
 
@@ -39,7 +38,7 @@ The operator runs a signaling server plus a TURN relay on their own VPS behind a
 
 The client installs a desktop agent. On macOS this requires granting two system permissions — Screen Recording and Accessibility — both of which need the app to be restarted afterward, and neither of which can be granted programmatically. This is the highest-risk moment in the entire product: a non-technical person, mid-problem, navigating System Settings.
 
-A typical session: client opens the agent and reads out a 9-digit ID and a 6-character password over the phone; operator enters both; the client's machine shows who is asking and waits for an explicit yes; the session runs for as long as the work takes; either side ends it.
+A typical session: client opens the agent and reads out a 9-digit number and an 8-character password over the phone; operator enters both; the client's machine shows who is asking and waits for an explicit yes; the session runs for as long as the work takes; either side ends it.
 
 ## Capabilities and Constraints
 

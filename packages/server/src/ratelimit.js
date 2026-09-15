@@ -2,7 +2,7 @@
  * Fixed-window counter keyed by string (an IP, usually).
  *
  * Deliberately in-memory and approximate: its job is to make a
- * brute-force run against a 6-character session password uninteresting,
+ * brute-force run against an 8-character session password uninteresting,
  * not to meter billing. The host agent's own lockout is the real
  * defence — this only keeps the noise off the wire.
  */

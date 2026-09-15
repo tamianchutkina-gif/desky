@@ -46,9 +46,15 @@ before(async () => {
       ATTEMPTS_PER_MINUTE: '10000',
       REGISTRATIONS_PER_HOUR: '10000',
       // The lockout gets its own tests below, and the production
-      // five-strike, five-minute setting would make them slow.
+      // five-strike, five-minute setting would make them slow. The
+      // failure window stays long on purpose: each guess costs a real
+      // PBKDF2 derivation in this process, and on a slow runner three of
+      // them take longer than a two second window — the counter forgot
+      // the first guess before the third arrived, and the lockout test
+      // flickered.
       MAX_AUTH_FAILURES: '3',
       AUTH_LOCKOUT_MS: '2000',
+      AUTH_FAILURE_WINDOW_MS: '60000',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -62,7 +68,7 @@ after(() => {
 });
 
 async function waitForServer() {
-  for (let attempt = 0; attempt < 60; attempt += 1) {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
     try {
       const res = await fetch(`http://127.0.0.1:${PORT}/healthz`);
       if (res.ok) return;
@@ -619,23 +625,29 @@ test('minting new device ids is metered per address', async () => {
   // Registration is unauthenticated by design — an agent has no
   // credential on first run — so the only thing standing between a
   // script and an unbounded registry is this limit.
+  const limitedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'desky-rl-'));
   const limited = spawn(process.execPath, [path.join(ROOT, 'packages/server/src/index.js')], {
     env: {
       ...process.env,
       PORT: String(PORT + 1),
-      DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'desky-rl-')),
+      DATA_DIR: limitedDir,
       REGISTRATIONS_PER_HOUR: '3',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
   try {
-    for (let attempt = 0; attempt < 60; attempt += 1) {
+    // The other test files run at the same time and spend their seconds
+    // in PBKDF2, so a second server can take well over the six seconds
+    // this used to allow just to start. Wait as long as the main one.
+    let up = false;
+    for (let attempt = 0; attempt < 300 && !up; attempt += 1) {
       try {
-        if ((await fetch(`http://127.0.0.1:${PORT + 1}/healthz`)).ok) break;
+        up = (await fetch(`http://127.0.0.1:${PORT + 1}/healthz`)).ok;
       } catch { /* not up yet */ }
-      await delay(100);
+      if (!up) await delay(100);
     }
+    assert.ok(up, 'the rate-limited server never came up');
 
     const open = async () => {
       const socket = new WebSocket(`ws://127.0.0.1:${PORT + 1}/signal`);
@@ -658,6 +670,7 @@ test('minting new device ids is metered per address', async () => {
     assert.deepEqual(outcomes.slice(3), Array(2).fill(MSG.ERROR), 'excess mints refused');
   } finally {
     limited.kill('SIGKILL');
+    fs.rmSync(limitedDir, { recursive: true, force: true });
   }
 });
 

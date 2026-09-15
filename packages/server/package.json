@@ -1,6 +1,6 @@
 {
   "name": "@desky/server",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "description": "Desky signaling server — rendezvous only, never sees screen data.",
@@ -11,5 +11,7 @@
   },
   "dependencies": {
     "ws": "^8.21.3"
-  }
+  },
+  "license": "MIT",
+  "author": "Tamilya Anchutkina"
 }

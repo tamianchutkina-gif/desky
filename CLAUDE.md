@@ -36,27 +36,24 @@ npm run icon --workspace=@desky/host       # regenerate the icon from code
 There is no linter and no build step. The console and all renderers are plain
 ES modules served or loaded as-is.
 
-## Do not package from the Google Drive folder
+## Package from a local clone, not from a cloud-synced folder
 
-The working copy lives under `~/Library/CloudStorage/GoogleDrive-.../My Drive/`,
-and reads through that file provider run at roughly 30 KB/s. Nothing that
-walks `node_modules` finishes at that rate: `npm run dist:mac:universal` there
-does not run slowly, it stops — twice for 26 and 9 minutes at essentially zero
-CPU, blocked inside `isexe` trying to spawn a child. It reads as a hung build
-and it is a hung filesystem.
+A working copy inside a cloud file provider (Google Drive, iCloud Drive,
+Dropbox) reads at tens of kilobytes per second, and nothing that walks
+`node_modules` finishes at that rate: `npm run dist:mac:universal` there does
+not run slowly, it stops — blocked inside `isexe` trying to spawn a child, at
+essentially zero CPU. It reads as a hung build and it is a hung filesystem.
 
-Package from a local clone instead. Clone rather than copy — the copy is
-itself the slow step:
+Clone rather than copy — the copy is itself the slow step:
 
 ```bash
-gh repo clone tamianchutkina-gif/desky ~/desky-build -- --depth 1
-cd ~/desky-build && npm install
+git clone --depth 1 https://github.com/tamianchutkina-gif/desky.git ~/desky-build
+cd ~/desky-build && npm ci
 DESKY_SERVER=wss://desky.example.com/signal npm run dist:mac:universal
 ```
 
-From there the whole sequence is fast: `npm install` in 6 seconds, the
-universal build in about two minutes. Check free disk first — a universal
-build peaks around 2.5 GB and this machine runs close to full.
+From a local clone the universal build takes about two minutes and peaks
+around 2.5 GB of disk.
 
 ## Shared code is copied, not linked
 
@@ -85,14 +82,16 @@ process. Everything crosses through IPC and a narrow `contextBridge`.
 | Process | Owns |
 |---|---|
 | `src/main.js` | signaling socket, consent, native input, session log, permissions, all state |
-| `renderer/engine.js` (hidden window) | `RTCPeerConnection`, screen capture, both data channels |
+| `renderer/engine.js` (hidden window) | `RTCPeerConnection`, screen capture, the data channels |
 | `renderer/panel.js` | everything the client sees and decides |
 | `renderer/border.js` | the click-through frame drawn over the shared screen |
 
-The agent is the WebRTC **offerer** — it holds the media and creates both data
-channels; the console answers. Two channels, deliberately different: `input` is
-unordered with no retransmission and carries binary frames (a resent mouse
-position is worse than a dropped one), `control` is reliable JSON.
+The agent is the WebRTC **offerer** — it holds the media and creates the data
+channels; the console answers. Three channels, deliberately different: `input`
+is unordered with no retransmission and carries binary frames (a resent mouse
+position is worse than a dropped one), `input-reliable` carries the events
+that must not be lost — key releases above all — and `control` is reliable
+JSON.
 
 `main.js` is the security boundary. Renderers hold no session logic: a bug in
 `panel.js` cannot grant access.
@@ -310,8 +309,8 @@ deliberate Unicode fixtures in `tests/protocol.test.mjs`.
 
 `scripts/make-icon.mjs` draws the mark as an HTML page, captures it through
 Electron at every size macOS wants, and assembles `.icns` with `iconutil`.
-Electron rather than a rasterizer because this machine has no SVG rasterizer
-and Electron is already a dependency.
+Electron rather than a rasterizer because Electron is already a dependency
+and a separate rasterizer would be one more thing to install.
 
 Four things about it are load-bearing:
 

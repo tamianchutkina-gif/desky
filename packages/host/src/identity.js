@@ -170,10 +170,14 @@ export class Identity {
   /**
    * Verifies an operator's proof against the current session password.
    *
-   * A wrong password rotates it after a few tries rather than merely
-   * counting failures, so a guessing attempt is not just slowed down —
-   * it is invalidated, and whoever is guessing has to get the new
-   * password from the person sitting at the machine.
+   * A wrong password counts against the address it came from, and a
+   * few of them lock that address out for a minute. The password itself
+   * does not change on a stranger's guesses: rotating it used to, and
+   * that let anyone who knew the nine-digit id change the client's
+   * password every minute from a couple of addresses — a denial of
+   * service against the operator with no gain in safety, because at
+   * thirty guesses a minute an eight-character password is not going to
+   * be found. It rotates when a session ends, is declined or expires.
    *
    * Each accepted challenge is remembered and refused thereafter. Without
    * that, a proof captured from one attempt — a request that timed out
@@ -210,16 +214,10 @@ export class Identity {
     this.#failures.set(key, failures);
 
     if (failures >= 3) {
-      // Order matters. rotatePassword() clears the locks, so setting the
-      // lockout first meant it was erased on the very next line: the
-      // minute-long brake this class documents, that README promises and
-      // that the panel has copy for, never once engaged. Rotate, then
-      // lock.
-      //
-      // The rotation is global because a guessed-at password may have
-      // leaked something; the lockout is not, because it must cost the
-      // guesser and nobody else.
-      this.rotatePassword();
+      // The lockout is per address, because it must cost the guesser and
+      // nobody else — see verify()'s doc comment for why the password
+      // is left alone.
+      this.#failures.delete(key);
       this.#locks.set(key, Date.now() + 60_000);
     }
     return false;

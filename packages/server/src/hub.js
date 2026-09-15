@@ -6,6 +6,9 @@ import { RateLimiter } from './ratelimit.js';
 import { iceServersFor } from './turn.js';
 import { MSG, REJECT, PROTOCOL_VERSION } from '../../../shared/protocol.js';
 
+/** A proof is HMAC-SHA-256 as lowercase hex — anything else is not worth relaying. */
+const PROOF_SHAPE = /^[0-9a-f]{64}$/;
+
 /**
  * The signaling hub.
  *
@@ -309,6 +312,14 @@ export class Hub {
       peer.send({ t: MSG.OP_REJECTED, reason: REJECT.BAD_CODE });
       return;
     }
+    // The proof is relayed untouched, but its shape is checked here so
+    // that a request carrying a kilobyte of garbage never reaches the
+    // agent — each attempt the agent looks at costs it a key derivation,
+    // and that is the client's CPU, not the server's.
+    if (!PROOF_SHAPE.test(String(msg.proof ?? ''))) {
+      peer.send({ t: MSG.OP_REJECTED, reason: REJECT.BAD_PASSWORD });
+      return;
+    }
     if (this.#isLocked(challenge.code, peer.address)) {
       peer.send({ t: MSG.OP_REJECTED, reason: REJECT.LOCKED });
       return;
@@ -457,7 +468,7 @@ export class Hub {
     // between every pair of guesses: the threshold was never reached, so
     // REJECT.LOCKED was a state this class could not enter. The same
     // shape as the Identity#verify bug the 2026-08-27 audit fixed.
-    if (entry.lockedUntil || now - entry.updatedAt > config.authLockoutMs) {
+    if (entry.lockedUntil || now - entry.updatedAt > config.authFailureWindowMs) {
       this.#penalties.delete(key);
     }
     return false;
