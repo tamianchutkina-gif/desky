@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/tamianchutkina-gif/desky/actions/workflows/test.yml/badge.svg)](https://github.com/tamianchutkina-gif/desky/actions/workflows/test.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![node ≥ 20.11](https://img.shields.io/badge/node-%E2%89%A5%2020.11-339933)
+![node ≥ 22.12](https://img.shields.io/badge/node-%E2%89%A5%2022.12-339933)
 
 **Remote support the client stays in charge of.** You connect to a client's
 computer and work on it as if you were sitting there. Nothing is shared
