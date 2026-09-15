@@ -9,6 +9,9 @@ import { MSG, REJECT, PROTOCOL_VERSION } from '../../../shared/protocol.js';
 /** A proof is HMAC-SHA-256 as lowercase hex — anything else is not worth relaying. */
 const PROOF_SHAPE = /^[0-9a-f]{64}$/;
 
+/** Penalty rows are swept for expired entries once there are this many. */
+const PENALTY_SWEEP_AT = 1000;
+
 /**
  * The signaling hub.
  *
@@ -285,11 +288,14 @@ export class Hub {
     };
     peer.challenge = challenge;
 
+    // No host name here: a challenge is handed to anyone who types a
+    // nine-digit number, and the name — "Irina's MacBook Air" — is
+    // worth something to a stranger. It arrives with OP_PENDING, after
+    // the proof.
     peer.send({
       t: MSG.OP_CHALLENGE,
       sessionId: challenge.id,
       nonce: challenge.nonce,
-      hostName: host.name,
     });
   }
 
@@ -437,6 +443,10 @@ export class Hub {
   }
 
   #penalize(code, address) {
+    // Rows are otherwise only dropped when the same key is looked at
+    // again, so a scan across many codes from many addresses would leave
+    // a row per pair forever. Sweep once the map is big enough to matter.
+    if (this.#penalties.size >= PENALTY_SWEEP_AT) this.#sweepPenalties();
     const key = this.#penaltyKey(code, address);
     const entry = this.#penalties.get(key) ?? { failures: 0, lockedUntil: 0, updatedAt: 0 };
     entry.failures += 1;
@@ -448,6 +458,16 @@ export class Hub {
         address ?? 'unknown', code, Math.round(config.authLockoutMs / 60000));
     }
     this.#penalties.set(key, entry);
+  }
+
+  #sweepPenalties() {
+    const now = Date.now();
+    for (const [key, entry] of this.#penalties) {
+      const expired = entry.lockedUntil
+        ? now >= entry.lockedUntil
+        : now - entry.updatedAt > config.authFailureWindowMs;
+      if (expired) this.#penalties.delete(key);
+    }
   }
 
   #clearPenalty(code, address) {
@@ -486,6 +506,7 @@ export class Hub {
  */
 function sanitizeName(name, fallback = 'Operator') {
   const cleaned = String(name ?? '')
+    // eslint-disable-next-line no-control-regex -- stripping them is the point
     .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028\u2029\u202a-\u202e]/g, '')
     .trim();
   return cleaned.slice(0, 48) || fallback;

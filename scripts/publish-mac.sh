@@ -106,11 +106,13 @@ echo "     $SUM"
 say "3/5  Uploading to $TARGET"
 
 SUDO=$(ssh "$TARGET" '[ "$(id -u)" = 0 ] && echo "" || echo sudo')
-STAGE="/tmp/desky-publish-$$.zip"
 
 # Staged through /tmp because $REMOTE_DIR is mode 750 and owned by the
 # service account: the deploying account cannot write into it, and scp
-# has no way to gain privilege on the far side.
+# has no way to gain privilege on the far side. mktemp on the far side,
+# not a name built from this shell's pid: a predictable path in a shared
+# /tmp is a symlink waiting to happen.
+STAGE=$(ssh "$TARGET" 'mktemp /tmp/desky-publish.XXXXXXXX')
 scp -q "$ARCHIVE" "$TARGET:$STAGE"
 echo "     uploaded"
 
@@ -148,14 +150,17 @@ if [ "$REMOTE_SUM" != "$SUM" ]; then
   exit 1
 fi
 
-SERVED=$(curl -fsSI "https://$DOMAIN/download/Desky-mac.zip" | tr -d '\r' \
-          | awk 'tolower($1)=="content-length:"{print $2}')
-LOCAL=$(wc -c <"$ARCHIVE" | tr -d ' ')
-[ "$SERVED" = "$LOCAL" ] || {
-  echo "The server is offering $SERVED bytes; the archive is $LOCAL." >&2
+# Then the archive itself, hashed as it comes off the wire. A header
+# check would only prove the length; the promise to the client is that
+# the bytes they download are the bytes that were built here.
+SERVED_SUM=$(curl -fsSL --proto '=https' "https://$DOMAIN/download/Desky-mac.zip" | shasum -a 256 | cut -d' ' -f1)
+[ "$SERVED_SUM" = "$SUM" ] || {
+  echo "The archive the server serves does not hash to what was uploaded." >&2
+  echo "  expected $SUM" >&2
+  echo "  served   ${SERVED_SUM:-(nothing)}" >&2
   exit 1
 }
-echo "     $SERVED bytes, checksum matches"
+echo "     served archive hashes to the uploaded checksum"
 
 curl -fsSL "https://$DOMAIN/install.sh" | head -1 | grep -q '^#!/bin/bash' || {
   echo "https://$DOMAIN/install.sh is not serving the installer." >&2

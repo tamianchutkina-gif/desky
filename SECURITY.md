@@ -20,13 +20,17 @@ is meant to leave them unable to open one, substitute one, or watch one.
   offline guess at an eight-character password — the one attack a malicious
   server is positioned to try — costs GPU years, not milliseconds.
 - Every handshake is single-use. A captured proof cannot be replayed.
-- The password rotates after every session, every decline, every expired
-  request and every three wrong attempts, which also locks the agent for a
-  minute. Rotation is shown to the client so a surprise change reads as the
-  warning it is.
-- TURN credentials are minted per session from a secret that never reaches
-  a browser; the relay refuses to forward to private ranges and to the
-  server's own address.
+- The password rotates after every session, every decline and every
+  expired request. Three wrong attempts from one address lock that address
+  out for a minute; they do not change the password, because letting a
+  stranger's guesses do that would let anyone who knows the nine-digit
+  number change the client's password at will.
+- TURN credentials are short-lived (twelve hours, so a working day's
+  session never loses its relay) and minted from a secret that never
+  reaches a browser. The relay refuses to forward to private ranges, will
+  not relay TCP, caps bandwidth per allocation, and the deploy script adds
+  the server's own addresses to the denied list — a manual deployment
+  must do the same.
 - The device registry on the server stores hashes of device tokens, never
   the tokens themselves — a stolen registry cannot impersonate an agent.
 
@@ -37,6 +41,23 @@ every window and a kill switch (⌘⌥⇧X) ends it from anywhere.
 
 **The session log stays on the client's machine.** It is written locally and
 sent nowhere.
+
+## What has not been done
+
+The protocol has not had an independent audit. The threat model above, the
+tests, and the reasoning in `CLAUDE.md` are what stand behind it; review is
+welcome, and a report through the channel below gets a reply.
+
+Two known weaknesses are documented rather than hidden:
+
+- The password proof is PBKDF2-HMAC, not a PAKE. A malicious server sees
+  the proof and can try passwords against it offline; the key stretching
+  makes that cost years per password rather than milliseconds, and the
+  password is retired after one session. A PAKE would remove the offline
+  guess altogether and is on the roadmap.
+- Input injection uses a prebuilt native binding (`@nut-tree-fork/libnut`,
+  Apache-2.0). Its version is pinned exactly; it is not built from source
+  here.
 
 ## What the design does not cover
 

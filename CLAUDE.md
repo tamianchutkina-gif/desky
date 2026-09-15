@@ -33,8 +33,10 @@ DESKY_SERVER=wss://your.domain/signal npm run dist:mac --workspace=@desky/host
 npm run icon --workspace=@desky/host       # regenerate the icon from code
 ```
 
-There is no linter and no build step. The console and all renderers are plain
-ES modules served or loaded as-is.
+There is no build step. The console and all renderers are plain ES modules
+served or loaded as-is. `npm run lint` runs ESLint over everything, browser
+files included — they are imported by no test, so this is the only thing
+that parses them before a deploy.
 
 ## Package from a local clone, not from a cloud-synced folder
 
@@ -293,7 +295,7 @@ Server behaviour is configured entirely by environment variables read in
 
 ## Design
 
-`PRODUCT.md` holds product truth, `DESIGN.md` the visual system, and both are
+`docs/product.md` holds product truth, `docs/design.md` the visual system, and both are
 binding. Two rules there are load-bearing rather than decorative:
 
 - Seal red means exactly one thing — control of this machine is currently

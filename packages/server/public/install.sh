@@ -59,20 +59,26 @@ trap 'rm -rf "$WORK"' EXIT
 # ---------------------------------------------------------------------
 step "1/4  Downloading"
 
-curl -fL --progress-bar "$ARCHIVE_URL" -o "$WORK/Desky.zip" \
+# --proto '=https': the archive URL is built from this script's own
+# origin, and a redirect to plain http on the way would otherwise be
+# followed without a word.
+curl -fL --proto '=https' --tlsv1.2 --progress-bar "$ARCHIVE_URL" -o "$WORK/Desky.zip" \
   || die "Could not download from $ARCHIVE_URL"
 
 # The checksum is fetched rather than pinned in this file: the script is
 # served from the same origin as the archive, so pinning would add no
 # authority it does not already have. What it does catch is a truncated
 # or corrupted transfer, which is the realistic failure over a home
-# connection and is otherwise met later as an unexplained crash.
-if curl -fsSL "$ARCHIVE_URL.sha256" -o "$WORK/Desky.zip.sha256" 2>/dev/null; then
-  EXPECTED=$(cut -d' ' -f1 <"$WORK/Desky.zip.sha256")
-  ACTUAL=$(shasum -a 256 "$WORK/Desky.zip" | cut -d' ' -f1)
-  [ "$EXPECTED" = "$ACTUAL" ] || die "The download is damaged. Run the command again."
-  say "checksum ok"
-fi
+# connection and is otherwise met later as an unexplained crash. A
+# missing checksum file is a failure, not a pass: an installer that
+# skips its only integrity check when the check is unavailable has no
+# integrity check.
+curl -fsSL --proto '=https' --tlsv1.2 "$ARCHIVE_URL.sha256" -o "$WORK/Desky.zip.sha256" \
+  || die "Could not download the checksum from $ARCHIVE_URL.sha256"
+EXPECTED=$(cut -d' ' -f1 <"$WORK/Desky.zip.sha256")
+ACTUAL=$(shasum -a 256 "$WORK/Desky.zip" | cut -d' ' -f1)
+[ -n "$EXPECTED" ] && [ "$EXPECTED" = "$ACTUAL" ] || die "The download is damaged. Run the command again."
+say "checksum ok"
 
 # ---------------------------------------------------------------------
 step "2/4  Unpacking"

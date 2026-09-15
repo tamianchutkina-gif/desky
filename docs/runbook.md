@@ -126,7 +126,7 @@ drags with the mouse, everything else is on sliders, and it exports the SVG
 whose paths go back into `scripts/make-icon.mjs`. The two favicons in
 `packages/server/public/index.html` and `install.html` carry the same paths
 inline and are **not** generated — change the mark and they change by hand.
-`DESIGN.md` holds the rules the mark obeys.
+`docs/design.md` holds the rules the mark obeys.
 
 `npm run host` will not show it: that runs through the installed Electron
 binary and shows Electron's icon. Only a packaged build carries it.

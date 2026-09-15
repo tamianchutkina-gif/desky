@@ -40,6 +40,7 @@ const video = $('screen');
 
 let socket = null;
 let socketReady = false;
+let signalingRetryMs = 2000;
 let session = null;
 let pc = null;
 let inputChannel = null;
@@ -169,6 +170,7 @@ function connectSignaling() {
 
   socket.addEventListener('open', () => {
     socketReady = true;
+    signalingRetryMs = 2000;
     setServerState('ok', 'Server connected');
   });
 
@@ -186,8 +188,11 @@ function connectSignaling() {
     socketReady = false;
     setServerState('warn', 'No connection to the server');
     // A dropped signaling socket does not end a running session: media
-    // is peer-to-peer and keeps flowing. Only reconnect for the next one.
-    setTimeout(connectSignaling, 2000);
+    // is peer-to-peer and keeps flowing. Only reconnect for the next one,
+    // and back off while the server stays away — a console left open on
+    // a dead server should not knock every two seconds all night.
+    setTimeout(connectSignaling, signalingRetryMs);
+    signalingRetryMs = Math.min(signalingRetryMs * 2, 30_000);
   });
 
   socket.addEventListener('error', () => {
@@ -211,8 +216,6 @@ async function handleSignal(msg) {
     case MSG.OP_CHALLENGE: {
       if (!session) return;
       session.id = msg.sessionId;
-      session.hostName = msg.hostName;
-      $('waiting-host').textContent = msg.hostName || 'Client\u2019s computer';
 
       const proof = await computeProof(
         session.password,
@@ -230,6 +233,8 @@ async function handleSignal(msg) {
     }
 
     case MSG.OP_PENDING:
+      session.hostName = msg.hostName || session.hostName;
+      $('waiting-host').textContent = session.hostName || 'Client\u2019s computer';
       show('waiting');
       break;
 

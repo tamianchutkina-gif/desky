@@ -545,7 +545,7 @@ test('a proven operator does reserve the machine', async () => {
 });
 
 test('auth on a challenge that was never issued is refused', async () => {
-  const { host, code } = await registerHost();
+  const { host } = await registerHost();
 
   const forger = await Peer.open();
   forger.send({ t: MSG.OP_AUTH, sessionId: 'made-up', proof: 'x'.repeat(64), operatorName: 'Someone' });

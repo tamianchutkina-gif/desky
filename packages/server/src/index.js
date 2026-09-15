@@ -11,6 +11,9 @@ import { createInstallHandler } from './install.js';
 import { turnConfigured } from './turn.js';
 import { MSG } from '../../../shared/protocol.js';
 
+/** Outbound bytes a peer may leave unread before it is dropped. */
+const MAX_UNREAD_BYTES = 1_000_000;
+
 const hub = new Hub();
 
 const serveStatic = createStaticHandler([
@@ -131,6 +134,15 @@ class Peer extends EventEmitter {
 
   send(msg) {
     if (this.socket.readyState !== this.socket.OPEN) return;
+    // A peer that stops reading would otherwise let the relay buffer
+    // grow without bound — 256 KB a message, from a socket that costs
+    // the sender nothing. Nothing legitimate leaves a megabyte unread;
+    // signaling is a handful of small messages.
+    if (this.socket.bufferedAmount > MAX_UNREAD_BYTES) {
+      console.warn('[ws] peer %s is not reading; closing', this.id);
+      this.close();
+      return;
+    }
     this.socket.send(JSON.stringify(msg));
   }
 

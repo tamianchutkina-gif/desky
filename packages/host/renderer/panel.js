@@ -132,6 +132,12 @@ function renderReady() {
   } else if (state.connection === 'connecting') {
     el.className = 'state state-idle';
     el.textContent = 'Connecting to the server';
+  } else if (state.connection === 'outdated') {
+    el.className = 'state state-warn';
+    el.textContent = 'This copy of Desky is too old for the server. Ask for the new install link.';
+  } else if (state.connection === 'displaced') {
+    el.className = 'state state-warn';
+    el.textContent = 'Another copy of Desky is running on this computer';
   } else {
     el.className = 'state state-warn';
     el.textContent = 'No connection to the server';

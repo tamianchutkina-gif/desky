@@ -21,7 +21,7 @@
     "ws": "^8.21.3"
   },
   "devDependencies": {
-    "electron": "44.0.0",
+    "electron": "44.3.0",
     "electron-builder": "^26.15.7"
   },
   "build": {
@@ -56,13 +56,19 @@
       },
       "hardenedRuntime": false,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "files": [
+        "!**/node_modules/@nut-tree-fork/libnut-linux/**"
+      ]
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "files": [
+        "!**/node_modules/@nut-tree-fork/libnut-darwin/**"
+      ]
     },
     "afterPack": "build/adhoc-sign.cjs"
   },

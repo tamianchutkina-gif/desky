@@ -699,6 +699,17 @@ async function handleSignalingMessage(msg) {
       // forever: the server hands the ID to whichever registered last,
       // the displaced one reconnects and takes it back, and neither ever
       // settles. The copy that was displaced stands down instead.
+      // Same for a server that will not talk to this protocol version:
+      // reconnecting every few seconds gets the same refusal every time,
+      // and the panel would keep saying "Ready to connect" with a number
+      // nobody can use.
+      if (msg.reason === REJECT.VERSION) {
+        signaling.close();
+        connectionStatus = 'outdated';
+        pushPanelState();
+        break;
+      }
+
       if (msg.reason === REJECT.DISPLACED) {
         signaling.close();
         connectionStatus = 'displaced';

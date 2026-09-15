@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # Electron patch releases are Chromium patch releases; they should
+      # arrive as one PR, not three.
+      electron:
+        patterns: ["electron", "electron-builder"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

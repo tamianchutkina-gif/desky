@@ -1,0 +1,46 @@
+name: Bug report
+description: Something that should work and does not
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw instead. Screenshots of the panel or the console help; do not include a session password.
+    validations:
+      required: true
+  - type: dropdown
+    id: side
+    attributes:
+      label: Which side
+      options:
+        - The client's agent (the app on the supported machine)
+        - The operator's console (in the browser)
+        - The server or the deployment
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: client-os
+    attributes:
+      label: Client's macOS version and chip
+      placeholder: macOS 15.1, Apple M2
+  - type: input
+    id: browser
+    attributes:
+      label: Operator's browser
+      placeholder: Chrome 130 on macOS 15
+  - type: input
+    id: healthz
+    attributes:
+      label: What /healthz on your server returns
+      placeholder: '{"ok":true,"turn":true,...}'
+  - type: dropdown
+    id: path
+    attributes:
+      label: Connection path shown in the console
+      options:
+        - direct
+        - relay
+        - never connected
+        - not applicable

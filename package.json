@@ -29,9 +29,16 @@
     "test": "node --test 'tests/*.test.mjs'",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "publish:mac": "./scripts/publish-mac.sh"
+    "publish:mac": "./scripts/publish-mac.sh",
+    "lint": "eslint .",
+    "test:ci": "npm run lint && npm test"
   },
   "engines": {
     "node": ">=20.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0"
   }
 }

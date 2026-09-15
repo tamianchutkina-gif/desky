@@ -99,11 +99,14 @@ export function createStaticHandler(mounts) {
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
           'Referrer-Policy': 'no-referrer',
-          // In development every asset revalidates, so an edit shows up
-          // on reload instead of being served from cache for minutes.
-          'Cache-Control': ext === '.html' || process.env.NODE_ENV !== 'production'
-            ? 'no-cache'
-            : 'public, max-age=300',
+          // Scripts and styles revalidate on every load: their names carry
+          // no hash, and a five-minute cache meant that for five minutes
+          // after a deploy a console could run the new protocol.js against
+          // the old console.js. Fonts change rarely and are large, so
+          // they may be kept for a day.
+          'Cache-Control': ext === '.woff2' && process.env.NODE_ENV === 'production'
+            ? 'public, max-age=86400'
+            : 'no-cache',
         });
 
         if (req.method === 'HEAD') {

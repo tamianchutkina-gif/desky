@@ -257,6 +257,13 @@ ssh "$TARGET" "
   # credentials could use the relay to reach them.
   $SUDO sh -c \"printf 'denied-peer-ip=%s\n' '$PUBLIC_IP' >> \$LOCAL\"
 
+  # The same for every global IPv6 address the machine has: the
+  # denied ranges in turnserver.conf cover link-local and ULA, not a
+  # routable address the host itself answers on.
+  for A6 in \$(ip -6 addr show scope global 2>/dev/null | awk '/inet6/ { split(\$2, a, \"/\"); print a[1] }'); do
+    $SUDO sh -c \"printf 'denied-peer-ip=%s\n' \$A6 >> \$LOCAL\"
+  done
+
   $SUDO chown $SERVICE_USER:$SERVICE_USER \$LOCAL
   $SUDO chmod 600 \$LOCAL
   echo '     turn secret written to a file the other accounts cannot read'
